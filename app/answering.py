@@ -21,7 +21,9 @@ Question: {question}
 Return ONLY a JSON object with exactly these keys:
   "text"      - a plain-language answer at roughly a sixth-grade reading level.
                 {style_guidance}
-  "citations" - a list of citation strings, copied exactly from the passages above
+  "citations" - a list of citation strings, copied exactly from the "Citation:"
+                line of each passage above -- no brackets, quotes, or other
+                punctuation added around them
 
 Rules:
 - Say what the law says. Never tell the person what they should do.
@@ -67,7 +69,15 @@ def answer_question(model, question: str, passages: list[Passage], style: str = 
     # availability -- the wrong end of that trade for a refusal-first system.
     guidance = STYLE_GUIDANCE.get(style, STYLE_GUIDANCE[DEFAULT_STYLE])
 
-    block = "\n\n".join(f"[{p.citation}] {p.text}" for p in passages)
+    # No delimiter characters (brackets, quotes) around p.citation here: a
+    # real Vertex call against gemini-3.5-flash was observed copying the
+    # citation back WITH a wrapping "[...]" when the prompt used
+    # "[{citation}] {text}" -- a verified-correct citation then failed the
+    # exact-membership check below and the answer was wrongly discarded as
+    # fabricated_citation. Fixed at the prompt, not by loosening the
+    # membership check itself, which is the citation invariant and must stay
+    # exact-match-only.
+    block = "\n\n".join(f"Citation: {p.citation}\nText: {p.text}" for p in passages)
     with span("navigator.answer"):
         reply = model.generate(
             ANSWER_INSTRUCTION.format(passages=block, question=question, style_guidance=guidance)
