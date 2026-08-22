@@ -60,7 +60,7 @@ uv pip install -e ".[dev]"
 # 2. Run the test suite (no cloud credentials needed — everything is
 #    exercised against substrate.fakes.FakeModel / FakeFirestore).
 uv run pytest -q
-# -> 132 passed
+# -> 143 passed
 
 # 3. Run the app locally against fakes (no GCP project needed to browse
 #    the console; /api/case and /api/ask will error without real Vertex
@@ -93,16 +93,16 @@ Dockerfile is only exercised by `gcloud run deploy --source .` inside
    ten days after mailing, service by mail alone adds five calendar days.
 3. **Ask a question, get a cited answer.** `app.retrieval` ranks the small
    curated corpus of California statutory text by cosine similarity over
-   Vertex `text-embedding-005`, gated by two guards chosen from a real
-   measurement against this corpus: an absolute similarity floor, and an
-   ambiguity margin that refuses rather than guesses when the top two
-   passages score within 0.02 of each other (a real near-tie the measurement
-   found was 0.0002 apart — see [Retrieval](#retrieval)). If embeddings are
-   unavailable (no credentials, network failure) it falls back to the
-   original stopword-filtered token-overlap scorer. `app.answering` then
-   asks the model to answer *using only* the retrieved passages and rejects
-   the answer outright if its citation isn't an exact, verbatim match
-   against the corpus (see below).
+   Vertex `text-embedding-005`, with an absolute similarity floor sized from
+   a real measurement against this corpus: below it, retrieval returns
+   nothing. Passages that score within 0.02 of the top are treated as a
+   group the ranking cannot separate and are handed over *together* rather
+   than one of them being picked — see [Retrieval](#retrieval). If
+   embeddings are unavailable (no credentials, network failure) it falls
+   back to the original stopword-filtered token-overlap scorer.
+   `app.answering` then asks the model to answer *using only* the retrieved
+   passages and rejects the answer outright if its citation isn't an exact,
+   verbatim match against the corpus (see below).
 4. **Four halt conditions route to a human, not a guess.** Past deadline, a
    countersuit, an injury, or a criminal matter each stop the automated flow
    and assemble a legal-aid intake (`app.safety.build_referral`) from
@@ -153,29 +153,79 @@ embedding ranker would answer it confidently and *wrong*, which for a tool
 telling someone facing eviction what the law says is worse than the old
 scorer's refusal.
 
-So retrieval keeps two guards on top of the ranking, both sized from the
-table above, not picked in the abstract:
+So retrieval keeps two guards on top of the ranking, both sized from
+measurement rather than picked in the abstract:
 
 - **An absolute similarity floor (0.40).** Below it, `retrieve()` returns
   nothing — the same outcome as the old scorer finding zero word overlap, so
   the existing refusal-and-route-to-legal-aid path fires unchanged. Sized to
   the midpoint between the one measured off-topic score (an unrelated
   control sentence scored 0.3303 against the deadline passage) and the
-  lowest measured on-topic top score (0.4573).
-- **An ambiguity margin (0.02).** If the top two passages score within this
-  of each other, `retrieve()` also returns nothing rather than guess. It has
-  to catch the 0.0002 gap above while leaving the smallest genuine gap in the
-  table (0.0883, the deadline question) untouched; 0.02 clears both with
-  room to spare on either side.
+  lowest measured on-topic top score (0.4573). This is the only refusal in
+  retrieval.
+- **An ambiguity margin (0.02).** Passages scoring within this of the top
+  are a group the ranking cannot separate. They are returned *together*, and
+  `retrieve()`'s `limit` is not allowed to cut through the group.
 
-**This is not a strict improvement, and the guard means ambiguous questions
-are refused by design.** A tenant asking something that lands squarely
-between two passages will get the same "I would rather say nothing than
-guess" refusal the corpus-miss case gets, even though the corpus does, in a
-sense, contain relevant material. That tradeoff is deliberate: the product's
-invariant is never asserting a legal statement it cannot cite, and a
-coin-flip between two real statutes is not something this tool is willing to
-guess at either.
+### The margin used to refuse, and that was wrong
+
+The margin originally returned nothing on a near-tie, on the theory that a
+coin flip between two statutes was worse than silence. Measured against the
+deployed service, that guard refused the single question this product exists
+to answer — in every phrasing a frightened tenant with five days actually
+uses. Freshly measured, `text-embedding-005`, `us-central1`, against all
+three corpus documents:
+
+| query | § 1167 | § 1170 | service-methods | gap | old behaviour |
+|---|---|---|---|---|---|
+| "five day deadline" | **0.6194** | 0.3901 | 0.5874 | 0.0321 | grounded |
+| "when is my response due" | 0.6242 | 0.5456 | **0.6604** | 0.0362 | grounded, cites **both** |
+| "how many court days to respond to a summons" | **0.7859** | 0.5792 | 0.6995 | 0.0864 | grounded |
+| "how long do I have to respond" | 0.6373 | 0.5206 | **0.6381** | 0.0008 | **refused** |
+| "what is the deadline to file my answer" | 0.6462 | 0.6065 | **0.6481** | 0.0020 | **refused** |
+| "How many days do I have to respond?" | **0.6839** | 0.5398 | 0.6665 | 0.0175 | **refused** |
+
+The three refusals are the plain-English phrasings; the three successes are
+the ones that happen to use corpus vocabulary. And the two passages tying in
+the refused rows are not rival answers to the same question — CCP § 1167
+says *five court days*, and the service-methods passage says *when the clock
+starts*. Both belong in the answer. The proof is row two: "when is my
+response due" cleared the margin and succeeded precisely by citing both.
+
+So a near-tie now **widens the context instead of refusing**: the whole tie
+group is handed to the model together. Two reasons this is safe:
+
+1. `app.answering` validates every citation the model returns for exact
+   membership in the passages it was actually given. An extra passage
+   therefore cannot produce a fabricated citation — the worst case is an
+   answer citing a real statute the tenant can look up and judge.
+2. It handles the original motivating near-tie *better* than refusing did.
+   "How long before they kick me out" now reaches the model with the
+   deadline, defences and service passages together, instead of the
+   retriever resolving a 0.0002 gap by itself — the coin flip was never
+   fixed by refusing, only hidden. Checked live after this change, that
+   question still comes back refused, and correctly so: the corpus says
+   when a *response* is due, not when a lockout happens, so the model
+   returns no citation it can support. The refusal now comes from the
+   citation invariant looking at the material, not from the retriever
+   declining to hand any over.
+
+The group is **every** passage within the margin of the top, not the top two:
+a third passage tied as closely as the second has exactly as much claim to be
+in the answer, and dropping it would be the same arbitrary choice the margin
+exists to prevent.
+
+Two things worth being straight about. First, against this three-document
+corpus at the default `limit=3`, the margin currently has no observable
+effect — every passage above the floor reaches the model either way. It is
+kept, and enforced in `_top_passages`, so a smaller limit or a larger corpus
+cannot quietly reintroduce the coin flip. Second, the floor is doing less
+work than it looks: "how do I register a trademark" — a question with no
+relevant passage at all — scores 0.4069 against the service-methods passage
+and clears the 0.40 floor by 0.007. It is refused all the same, but by the
+citation invariant below, not by retrieval: the model is handed passages
+that do not answer it and returns no citation it can support. Refusal in
+this system is layered, and the citation check is the layer that holds.
 
 If the embedding backend is unavailable — no ADC, a network failure, a
 non-2xx or malformed response — `retrieve()` falls back to the original
@@ -208,7 +258,8 @@ eviction case is not a cosmetic bug.
 - **Backend:** Python 3.13, FastAPI, Pydantic
 - **Model:** Google Gemini (`gemini-3.5-flash` via Vertex AI, `substrate.gemini.GeminiModel`)
 - **Retrieval:** Vertex AI `text-embedding-005` (`us-central1`, `:predict`),
-  cosine similarity with an absolute floor and an ambiguity margin, falling
+  cosine similarity with an absolute floor below which nothing is returned
+  and an ambiguity margin that keeps near-tied passages together, falling
   back to token-overlap scoring when embeddings are unavailable — see
   [Retrieval](#retrieval)
 - **Storage:** Google Cloud Firestore (audit trail, case state, per-user

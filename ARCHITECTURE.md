@@ -122,11 +122,11 @@ measurement against this corpus rather than picked in the abstract:
 - **`SIMILARITY_FLOOR` (0.40)** — if the best-scoring passage is below this,
   `retrieve()` returns nothing, the same as the keyword scorer finding zero
   overlap, so `app.answering`'s existing refusal path fires.
-- **`AMBIGUITY_MARGIN` (0.02)** — if the top two passages score within this
-  of each other, `retrieve()` also returns nothing. Embeddings can rank two
-  genuinely different passages as an effective coin flip; guessing between
-  them on a five-court-day eviction deadline is worse than refusing and
-  routing to legal aid.
+- **`AMBIGUITY_MARGIN` (0.02)** — passages scoring within this of the top are
+  a group the ranking cannot separate. They are returned *together*, and
+  `retrieve()`'s `limit` may not cut through the group (`_top_passages`).
+  The margin does **not** refuse; the floor is the only refusal in
+  retrieval. It used to refuse, and that was a design error — see below.
 
 The guards were sized against this measured table (Vertex
 `text-embedding-005`, this corpus):
@@ -141,16 +141,22 @@ The guards were sized against this measured table (Vertex
 Embeddings alone get the first three right — including the heating question,
 which the old keyword scorer answered with *nothing* (zero token overlap) and
 so wrongly refused. The fourth is a near-tie a naive top-1 ranker would
-answer confidently and incorrectly; `AMBIGUITY_MARGIN` (0.02, two orders of
-magnitude above the 0.0002 gap, well under half of 0.0883 — the smallest gap
-in a row that must NOT be refused) catches it and refuses instead. **This is
-a real, by-design tradeoff, not a strict improvement**: three of four
-measured cases got better, one now correctly declines to guess where it
-previously would have (had this been naive top-1 embedding retrieval)
-guessed wrong. `SIMILARITY_FLOOR` (0.40) sits at the midpoint between the one
-measured off-topic score (an unrelated control sentence scored 0.3303
-against the deadline passage) and the lowest measured on-topic top score
-(0.4573).
+answer confidently and incorrectly. `SIMILARITY_FLOOR` (0.40) sits at the
+midpoint between the one measured off-topic score (an unrelated control
+sentence scored 0.3303 against the deadline passage) and the lowest measured
+on-topic top score (0.4573).
+
+`AMBIGUITY_MARGIN` originally *refused* on that fourth row. Measured against
+the deployed service, that refusal fired on every plain-English phrasing of
+the product's central question — "how long do I have to respond" (§ 1167
+0.6373 vs the service-methods passage 0.6381), "what is the deadline to file
+my answer" (0.6462 / 0.6481), "How many days do I have to respond?" (0.6839 /
+0.6665) — because the two tied passages were *both relevant*: one gives five
+court days, the other gives when the clock starts. A near-tie now widens the
+context instead of refusing. This cannot loosen the citation invariant:
+`app.answering` checks every returned citation for exact membership in the
+passages it was given, so an extra passage can only ever yield a real
+citation. Full measurement table and reasoning in README, "Retrieval".
 
 **`app.answering`** — Where the citation invariant lives (below). Takes a
 question and the retrieved passages, asks the model to answer using *only*
