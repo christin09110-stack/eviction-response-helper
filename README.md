@@ -60,11 +60,13 @@ uv pip install -e ".[dev]"
 # 2. Run the test suite (no cloud credentials needed — everything is
 #    exercised against substrate.fakes.FakeModel / FakeFirestore).
 uv run pytest -q
-# -> 123 passed
+# -> 132 passed
 
 # 3. Run the app locally against fakes (no GCP project needed to browse
 #    the console; /api/case and /api/ask will error without real Vertex
-#    credentials, since they call the live model).
+#    credentials, since they call the live model. /api/draft calls no
+#    model and works against the fake store, but needs a case already
+#    on file for that user_id -- i.e. a successful /api/case call first).
 USE_FAKE_STORE=1 uv run uvicorn app.main:app --host 127.0.0.1 --port 8080
 # open http://127.0.0.1:8080/
 
@@ -112,10 +114,16 @@ Dockerfile is only exercised by `gcloud run deploy --source .` inside
    (`app.forms.assess_defenses`) — never by the model — because a
    hallucinated affirmative defense in a filed court document is the worst
    failure this product could have. `app.forms.draft_ud105` renders the
-   selected defenses onto a PDF stamped "PREPARED DRAFT — NOT FILED." This
-   engine is implemented and fully tested (10 tests in
-   `tests/test_forms.py`) but is not yet wired into the deployed web
-   console — see [Known limitations](#known-limitations).
+   selected defenses onto a PDF stamped "PREPARED DRAFT — NOT FILED."
+   Reachable from the console's step 3 ("Prepare your Answer (UD-105)") via
+   `POST /api/draft`: it looks up the tenant's case from the store, runs
+   the handful of facts the tenant answers on that screen through
+   `assess_defenses`, and streams the rendered PDF straight back as an
+   in-memory download — nothing is written to disk, so there is nothing for
+   Cloud Run's ephemeral filesystem to lose between requests. Covered by 10
+   tests in `tests/test_forms.py` plus 9 in `tests/test_api.py` (missing
+   case, missing name, PDF magic bytes, download headers, and defense
+   selection driven by the submitted facts).
 6. **A style preference that actually changes the answer.** A tenant's
    feedback ("did that make sense?") is recorded per-user
    (`app.preferences`) and the next answer is generated in whichever of
@@ -301,19 +309,11 @@ and the check.
   `app.retrieval._adc_likely_available()` checks
   `GOOGLE_APPLICATION_CREDENTIALS`, the gcloud well-known ADC file, and
   `K_SERVICE` (always set on Cloud Run) first, with no network call, so the
-  full 123-test suite still runs in well under a second, and the real ADC
-  path is exercised for real, unaffected, in production.
+  full test suite still runs in well under a second, and the real ADC path
+  is exercised for real, unaffected, in production.
 
 ## Known limitations
 
-- **The UD-105 draft is not wired into the web console.** `app.forms` is
-  implemented, deterministic, and fully tested, but the deployed API only
-  exposes `/api/case` (photo → deadline) and `/api/ask` (question →
-  grounded answer). Producing the drafted PDF today requires calling
-  `app.forms.draft_ud105` directly (see `tests/test_forms.py` for a worked
-  example) rather than clicking a button in the browser. This is a scoping
-  gap, not a correctness one — the engine behind the drafting claim is real
-  and tested, the UI wiring for it is the next increment.
 - **The corpus is small and hand-picked.** It covers response timing,
   service method effects, and the four affirmative defenses on form UD-105
   — not the full range of unlawful detainer law. Anything outside it is
