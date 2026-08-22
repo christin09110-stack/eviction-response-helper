@@ -1,6 +1,6 @@
 import json
 
-from app.answering import Answer, answer_question
+from app.answering import STYLE_GUIDANCE, Answer, answer_question
 from app.retrieval import Passage
 from substrate.fakes import FakeModel
 
@@ -107,3 +107,42 @@ def test_one_fabricated_citation_among_real_ones_rejects_the_whole_answer():
     answer = answer_question(FakeModel([reply]), "how long?", PASSAGES)
     assert answer.grounded is False
     assert answer.citations == []
+
+
+# --- Explanation-style preference must change the actual prompt sent to the
+# model, not just ride along as a label. (This is what Task 7's brief calls
+# "a real preference that changes real output, not a claim" -- the wiring
+# has to reach the generation call, not stop at reporting the preference.) ---
+
+
+def test_default_style_is_plain_and_says_so_in_the_prompt():
+    model = FakeModel([_reply("Five days.", ["Cal. Code Civ. Proc. § 1167"])])
+    answer_question(model, "how long?", PASSAGES)
+    assert STYLE_GUIDANCE["plain"] in model.calls[0]["prompt"]
+
+
+def test_analogy_style_changes_the_prompt_sent_to_the_model():
+    model = FakeModel([_reply("Five days.", ["Cal. Code Civ. Proc. § 1167"])])
+    answer_question(model, "how long?", PASSAGES, style="analogy")
+    assert STYLE_GUIDANCE["analogy"] in model.calls[0]["prompt"]
+    assert STYLE_GUIDANCE["analogy"] != STYLE_GUIDANCE["plain"]
+
+
+def test_stepwise_style_changes_the_prompt_sent_to_the_model():
+    model = FakeModel([_reply("Five days.", ["Cal. Code Civ. Proc. § 1167"])])
+    answer_question(model, "how long?", PASSAGES, style="stepwise")
+    assert STYLE_GUIDANCE["stepwise"] in model.calls[0]["prompt"]
+
+
+def test_unknown_style_falls_back_to_plain_rather_than_raising():
+    model = FakeModel([_reply("Five days.", ["Cal. Code Civ. Proc. § 1167"])])
+    answer_question(model, "how long?", PASSAGES, style="interpretive-dance")
+    assert STYLE_GUIDANCE["plain"] in model.calls[0]["prompt"]
+
+
+def test_style_does_not_weaken_the_citation_invariant():
+    """CORE INVARIANT — do not weaken. Style must never bypass grounding."""
+    reply = json.dumps({"text": "You should just move out.", "citations": []})
+    answer = answer_question(FakeModel([reply]), "what should I do?", PASSAGES, style="analogy")
+    assert answer.grounded is False
+    assert "You should just move out." not in answer.text

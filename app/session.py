@@ -81,8 +81,12 @@ def start_case(model, store: Store, user_id: str, image: bytes, today: date) -> 
 
 def ask(model, store: Store, user_id: str, question: str) -> Reply:
     with span("navigator.ask", user=user_id):
+        # Looked up before generation and passed into answer_question so the
+        # preference actually changes what is asked of the model, not only
+        # what is reported back afterwards.
+        style = preferred_style(store, user_id)
         passages = retrieve(question, load_corpus())
-        answer = answer_question(model, question, passages)
+        answer = answer_question(model, question, passages, style=style)
         store.append_audit(
             user_id,
             {"step": "answer", "grounded": answer.grounded, "citations": len(answer.citations)},
@@ -93,6 +97,6 @@ def ask(model, store: Store, user_id: str, question: str) -> Reply:
             data={
                 "citations": answer.citations,
                 "grounded": answer.grounded,
-                "style": preferred_style(store, user_id),
+                "style": style,
             },
         )

@@ -19,7 +19,8 @@ detainer matter.
 Question: {question}
 
 Return ONLY a JSON object with exactly these keys:
-  "text"      - a plain-language answer at roughly a sixth-grade reading level
+  "text"      - a plain-language answer at roughly a sixth-grade reading level.
+                {style_guidance}
   "citations" - a list of citation strings, copied exactly from the passages above
 
 Rules:
@@ -28,6 +29,20 @@ Rules:
 - If the passages do not answer the question, return an empty citations list.
 - Do not wrap the JSON in markdown fences.
 """
+
+# This is the substance of the "adapts to the user's unique way of thinking"
+# clause (app.preferences): the style has to change what is actually sent to
+# the model, not just ride along in the reply as a label nobody reads. A
+# preference that is stored and reported back but never reaches the
+# generation call is not a preference that changes output -- it is a claim
+# that one exists. app.session.ask looks this up via
+# app.preferences.preferred_style and passes it in below.
+STYLE_GUIDANCE = {
+    "plain": "Explain it in short, direct sentences.",
+    "analogy": "Explain it using one simple, concrete everyday analogy.",
+    "stepwise": "Explain it as a short numbered list of steps.",
+}
+DEFAULT_STYLE = "plain"
 
 
 @dataclass(frozen=True)
@@ -42,13 +57,21 @@ def _ungrounded(reason: str) -> Answer:
     return Answer(text=REFUSAL, citations=[], grounded=False)
 
 
-def answer_question(model, question: str, passages: list[Passage]) -> Answer:
+def answer_question(model, question: str, passages: list[Passage], style: str = DEFAULT_STYLE) -> Answer:
     if not passages:
         return _ungrounded("no_passages")
 
+    # An unrecognised style falls back to plain rather than raising: this is
+    # a presentation preference, not a correctness input, and letting a bad
+    # value here crash the whole answer would trade a display nicety for
+    # availability -- the wrong end of that trade for a refusal-first system.
+    guidance = STYLE_GUIDANCE.get(style, STYLE_GUIDANCE[DEFAULT_STYLE])
+
     block = "\n\n".join(f"[{p.citation}] {p.text}" for p in passages)
     with span("navigator.answer"):
-        reply = model.generate(ANSWER_INSTRUCTION.format(passages=block, question=question))
+        reply = model.generate(
+            ANSWER_INSTRUCTION.format(passages=block, question=question, style_guidance=guidance)
+        )
 
     try:
         payload = json.loads(reply.strip().removeprefix("```json").removeprefix("```").removesuffix("```"))

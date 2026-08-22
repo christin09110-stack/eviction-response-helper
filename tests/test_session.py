@@ -1,6 +1,8 @@
 import json
 from datetime import date
 
+from app.answering import STYLE_GUIDANCE
+from app.preferences import record_feedback
 from app.session import ask, start_case
 from substrate.config import load_config
 from substrate.fakes import FakeFirestore, FakeModel
@@ -101,3 +103,19 @@ def test_start_case_asks_for_a_retake_on_a_completely_unparseable_reply():
     that into a retake, not crash on a None deadline computation."""
     reply = start_case(FakeModel(["not json at all"]), _store(), "u1", b"png", TODAY)
     assert reply.kind == "retake"
+
+
+def test_ask_actually_uses_the_users_preferred_style_not_just_reports_it():
+    """Task 7's brief: 'a real preference that changes real output, not a
+    claim.' A style stored via record_feedback must reach the prompt sent to
+    the model on the next ask() call, not just come back as a label in
+    reply.data."""
+    store = _store()
+    record_feedback(store, "u1", "stepwise", landed=True)
+    model = FakeModel([json.dumps({
+        "text": "Five days.",
+        "citations": ["Cal. Code Civ. Proc. § 1167"],
+    })])
+    reply = ask(model, store, "u1", "how long do I have to respond")
+    assert reply.data["style"] == "stepwise"
+    assert STYLE_GUIDANCE["stepwise"] in model.calls[0]["prompt"]
