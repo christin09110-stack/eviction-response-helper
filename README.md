@@ -94,7 +94,7 @@ Dockerfile is only exercised by `gcloud run deploy --source .` inside
    `app.answering` asks the model to answer *using only that passage* and
    rejects the answer outright if its citation isn't an exact, verbatim
    match against the corpus (see below).
-4. **Six halt conditions route to a human, not a guess.** Past deadline, a
+4. **Four halt conditions route to a human, not a guess.** Past deadline, a
    countersuit, an injury, or a criminal matter each stop the automated flow
    and assemble a legal-aid intake (`app.safety.build_referral`) from
    whatever the tool already knows, so a tenant doesn't have to repeat
