@@ -42,6 +42,12 @@ def test_console_states_that_it_does_not_file_anything():
     assert "you file it yourself" in client.get("/").text.lower()
 
 
+def test_console_draft_card_states_that_it_does_not_file_the_answer():
+    body = client.get("/").text.lower()
+    draft_card = body[body.index('id="draft-card"'):]
+    assert "does not file anything" in draft_card
+
+
 def test_feedback_endpoint_requires_all_three_fields():
     assert client.post("/api/feedback", json={"user_id": "u1"}).status_code == 422
 

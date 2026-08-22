@@ -69,6 +69,52 @@
       </div>
     </section>
 
+    <section class="card" id="draft-card" hidden aria-labelledby="draft-heading">
+      <h2 id="draft-heading">3. Prepare your Answer (UD-105)</h2>
+      <p class="hint">
+        Answer what applies to you. Whether a defense is included is decided
+        by fixed rules from what you say here — never guessed.
+      </p>
+
+      <label for="defendant-name">Your full name (as it should appear on the form)</label>
+      <input id="defendant-name" type="text" autocomplete="name" inputmode="text">
+
+      <label class="check-row" for="reported-disrepair">
+        <input id="reported-disrepair" type="checkbox">
+        <span>I reported a repair problem to the landlord</span>
+      </label>
+      <label class="check-row" for="landlord-notified">
+        <input id="landlord-notified" type="checkbox">
+        <span>The landlord knew about the problem</span>
+      </label>
+
+      <label for="complained-on">Date you first complained (if any)</label>
+      <input id="complained-on" type="date">
+
+      <label for="notice-served-on">Date the notice to quit was served (if you know it)</label>
+      <input id="notice-served-on" type="date">
+
+      <label class="check-row" for="rent-accepted-after-notice">
+        <input id="rent-accepted-after-notice" type="checkbox">
+        <span>Rent was accepted after the notice period ended</span>
+      </label>
+      <label class="check-row" for="notice-defective">
+        <input id="notice-defective" type="checkbox">
+        <span>The notice looked wrong, or was not delivered properly</span>
+      </label>
+
+      <p class="hint draft-disclaimer">
+        <strong>This prepares a draft only — it does not file anything with
+        the court.</strong> Review every line, then file it yourself or bring
+        it to an advocate.
+      </p>
+
+      <div class="button-row">
+        <button id="draft" type="button" class="primary">Prepare my Answer (UD-105)</button>
+      </div>
+      <p id="draft-status" role="status" aria-live="polite"></p>
+    </section>
+
     <footer class="disclaimer">
       <p>
         Every legal statement here carries a citation. When this tool cannot

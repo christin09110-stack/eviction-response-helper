@@ -71,6 +71,7 @@ h3 { font-size: 15px; font-weight: 500; margin: 16px 0 4px; }
 label { display: block; margin-bottom: 8px; font-weight: 500; }
 
 input[type="text"],
+input[type="date"],
 .file-input {
   width: 100%;
   min-height: 48px;
@@ -80,7 +81,28 @@ input[type="text"],
   font-size: 16px;
   background: var(--surface);
   color: var(--ink);
+  margin: 0 0 12px;
 }
+
+.check-row {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  min-height: 48px;
+  padding: 4px 0;
+  margin-bottom: 4px;
+  font-weight: 400;
+  cursor: pointer;
+}
+.check-row input[type="checkbox"] {
+  width: 22px;
+  height: 22px;
+  min-width: 22px;
+  flex-shrink: 0;
+  accent-color: var(--primary);
+}
+
+.draft-disclaimer { margin-top: 4px; }
 
 .button-row {
   display: flex;

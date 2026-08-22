@@ -56,6 +56,7 @@ $("photo").addEventListener("change", async (event) => {
 
   $("deadline-card").hidden = true;
   $("halt-card").hidden = true;
+  $("draft-card").hidden = true;
 
   if (reply.kind === "retake") {
     status.textContent = reply.text;
@@ -67,9 +68,64 @@ $("photo").addEventListener("change", async (event) => {
     status.textContent = "Summons read successfully.";
     $("deadline-text").textContent = reply.text;
     $("deadline-card").hidden = false;
+    $("draft-status").textContent = "";
+    $("draft-card").hidden = false;
   } else {
     status.textContent = reply.text || "Something unexpected happened. Please try again.";
   }
+});
+
+$("draft").addEventListener("click", async () => {
+  const status = $("draft-status");
+  const defendantName = $("defendant-name").value.trim();
+  if (!defendantName) {
+    status.textContent = "Enter your name before preparing the draft.";
+    return;
+  }
+
+  const payload = {
+    user_id: USER_ID,
+    defendant_name: defendantName,
+    reported_disrepair: $("reported-disrepair").checked,
+    landlord_notified: $("landlord-notified").checked,
+    complained_on: $("complained-on").value || null,
+    notice_served_on: $("notice-served-on").value || null,
+    rent_accepted_after_notice: $("rent-accepted-after-notice").checked,
+    notice_defective: $("notice-defective").checked,
+  };
+
+  status.textContent = "Preparing your draft…";
+
+  let response;
+  try {
+    response = await fetch("/api/draft", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(payload),
+    });
+  } catch {
+    status.textContent = "Could not reach the server. Check your connection and try again.";
+    return;
+  }
+
+  if (!response.ok) {
+    status.textContent = response.status === 404
+      ? "Photograph your summons first (step 1) so there is a case to draft against."
+      : "Could not prepare the draft. Please try again.";
+    return;
+  }
+
+  const blob = await response.blob();
+  const url = URL.createObjectURL(blob);
+  const link = document.createElement("a");
+  link.href = url;
+  link.download = "UD-105-draft.pdf";
+  document.body.appendChild(link);
+  link.click();
+  link.remove();
+  URL.revokeObjectURL(url);
+
+  status.textContent = "Draft downloaded — this is not filed. Review every line, then file it yourself.";
 });
 
 $("send").addEventListener("click", async () => {
