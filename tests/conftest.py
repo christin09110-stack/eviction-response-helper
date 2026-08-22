@@ -2,6 +2,14 @@ import os
 
 import pytest
 
+# app.main builds a Store at import time. Without this seam, importing it
+# during test collection would try to open a real Firestore connection.
+# Must be set before any test module imports app.main, so it lives at
+# conftest module scope (executed once, at collection time) rather than in
+# a fixture (which would run too late, after collection has already
+# imported every test module).
+os.environ["USE_FAKE_STORE"] = "1"
+
 
 @pytest.fixture(autouse=True)
 def restore_environ():

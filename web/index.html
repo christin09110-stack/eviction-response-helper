@@ -1,0 +1,83 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Eviction Response Helper</title>
+  <meta name="description" content="Reads your California eviction summons, works out your real deadline, answers questions with a citation attached, and drafts your response for you to review and file yourself.">
+  <meta name="color-scheme" content="light dark">
+  <link rel="stylesheet" href="/static/app.css">
+</head>
+<body>
+  <a class="skip-link" href="#main">Skip to main content</a>
+
+  <header class="bar">
+    <h1>Eviction Response Helper</h1>
+    <p class="limit">
+      For <strong>California unlawful detainer (eviction) cases only</strong>.
+      This tool explains what the law says and prepares your paperwork —
+      <strong>you file it yourself</strong>. It is not a lawyer and it does
+      not give legal advice.
+    </p>
+  </header>
+
+  <main id="main">
+    <section class="card" aria-labelledby="step1-heading">
+      <h2 id="step1-heading">1. Photograph your summons</h2>
+      <p class="hint">Lay the first page flat in good light so all four corners are visible.</p>
+      <label for="photo">Take or choose a photo</label>
+      <input class="file-input" id="photo" type="file" accept="image/*" capture="environment">
+      <p id="photo-status" role="status" aria-live="polite"></p>
+    </section>
+
+    <section class="card" id="deadline-card" hidden aria-labelledby="deadline-heading">
+      <h2 id="deadline-heading">Your deadline</h2>
+      <p class="deadline-value" id="deadline-text" role="status" aria-live="assertive"></p>
+    </section>
+
+    <section class="card" id="halt-card" hidden aria-labelledby="halt-heading">
+      <h2 id="halt-heading">Talk to a person now</h2>
+      <p id="halt-text" role="alert"></p>
+    </section>
+
+    <section class="card" aria-labelledby="step2-heading">
+      <h2 id="step2-heading">2. Ask a question</h2>
+      <p class="hint">For example: "How long do I have to respond?"</p>
+      <label for="q">What do you want to know?</label>
+      <input id="q" type="text" autocomplete="off" inputmode="text">
+      <div class="button-row">
+        <button id="speak" type="button">
+          <span aria-hidden="true">🎤</span> Speak instead
+        </button>
+        <button id="send" type="button" class="primary">Ask</button>
+      </div>
+      <p id="speech-status" role="status" aria-live="polite" class="visually-hidden-when-empty"></p>
+
+      <div id="answer" hidden>
+        <h3>Answer</h3>
+        <p id="answer-text" aria-live="polite"></p>
+        <p class="cites" id="answer-cites"></p>
+        <button id="play" type="button">
+          <span aria-hidden="true">🔊</span> Play answer aloud
+        </button>
+        <fieldset class="feedback">
+          <legend>Did that explanation make sense?</legend>
+          <button type="button" class="feedback-btn" data-landed="true">Yes, that helped</button>
+          <button type="button" class="feedback-btn" data-landed="false">Not really</button>
+        </fieldset>
+        <p id="feedback-status" role="status" aria-live="polite"></p>
+      </div>
+    </section>
+
+    <footer class="disclaimer">
+      <p>
+        Every legal statement here carries a citation. When this tool cannot
+        find one, it says so instead of guessing, and offers to prepare an
+        intake for a legal aid advocate.
+      </p>
+    </footer>
+  </main>
+
+  <script src="/static/app.js"></script>
+</body>
+</html>
