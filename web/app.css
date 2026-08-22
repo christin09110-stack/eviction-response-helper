@@ -44,7 +44,7 @@ h1, h2, h3, .hero-count, .photo-picker-title {
 
 .skip-link {
   position: absolute;
-  top: -48px;
+  top: -80px;
   left: 8px;
   background: var(--primary);
   color: var(--primary-ink);
@@ -56,9 +56,13 @@ h1, h2, h3, .hero-count, .photo-picker-title {
 .skip-link:focus { top: 8px; }
 
 .bar {
-  padding: 20px 16px 16px;
   background: var(--surface);
   border-bottom: 1px solid var(--hairline);
+}
+.bar-inner {
+  max-width: 640px;
+  margin: 0 auto;
+  padding: 20px 16px 16px;
 }
 .bar h1 { font-size: 22px; margin: 0 0 6px; font-weight: 700; letter-spacing: -0.01em; }
 .limit {
@@ -153,7 +157,13 @@ input[type="date"] {
   white-space: nowrap;
   border: 0;
 }
-.photo-picker:focus-within {
+/* :focus-within does not reliably propagate from a type="file" input to its
+   wrapping label in Chromium (verified with Playwright: the input matches
+   :focus but the label never matches :focus-within) -- likely a UA
+   shadow-boundary quirk on file inputs specifically. app.js toggles this
+   class on focus/blur instead, so keyboard users still get a visible ring on
+   the one control that matters most on this page. */
+.photo-picker.is-focused {
   outline: 3px solid var(--focus);
   outline-offset: 3px;
 }

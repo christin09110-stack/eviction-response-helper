@@ -77,6 +77,10 @@ async function postJSON(url, body) {
   return response.json();
 }
 
+const photoPicker = document.querySelector(".photo-picker");
+$("photo").addEventListener("focus", () => photoPicker.classList.add("is-focused"));
+$("photo").addEventListener("blur", () => photoPicker.classList.remove("is-focused"));
+
 $("photo").addEventListener("change", async (event) => {
   const file = event.target.files[0];
   if (!file) return;
@@ -200,7 +204,7 @@ $("send").addEventListener("click", async () => {
   // that gets its own considered presentation, not error styling.
   const grounded = !reply.data || reply.data.grounded !== false;
   $("answer-panel").classList.toggle("is-refusal", !grounded);
-  $("answer-heading").textContent = grounded ? "Answer" : "No citation found";
+  $("answer-heading").textContent = grounded ? "Answer" : "I don't have a citation for that";
   $("answer-icon").innerHTML = grounded ? ANSWER_ICON_GROUNDED : ANSWER_ICON_REFUSAL;
 
   $("feedback-status").textContent = "";
