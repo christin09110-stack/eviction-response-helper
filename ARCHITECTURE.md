@@ -22,12 +22,13 @@ flowchart TD
     Intake["app.intake<br/>extract_summons / needs_retake"]
     Deadlines["app.deadlines<br/>compute_response_deadline"]
     Safety["app.safety<br/>check_halt / build_referral"]
-    Retrieval["app.retrieval<br/>load_corpus / retrieve"]
+    Retrieval["app.retrieval<br/>load_corpus / retrieve<br/>(embeddings, keyword fallback)"]
     Answering["app.answering<br/>answer_question<br/>(citation invariant)"]
     Preferences["app.preferences<br/>preferred_style / record_feedback"]
     Forms["app.forms<br/>assess_defenses / draft_ud105<br/>(tested, not yet wired to the API)"]
 
     Gemini["substrate.gemini.GeminiModel<br/>Vertex AI gemini-3.5-flash"]
+    Embeddings["Vertex AI text-embedding-005<br/>us-central1, :predict<br/>(falls back to keyword overlap)"]
     Store["substrate.store.Store<br/>Firestore: cases, audit, preferences"]
     Corpus["corpus/*.md, ud-105-fields.json"]
     Telemetry["substrate.telemetry<br/>OpenTelemetry -> Cloud Trace / Cloud Logging"]
@@ -43,6 +44,7 @@ flowchart TD
 
     Ask --> Preferences
     Ask --> Retrieval --> Corpus
+    Retrieval --> Embeddings
     Ask --> Answering --> Gemini
     Ask -->|"audit"| Store
 
@@ -101,10 +103,54 @@ who is routed to a human doesn't have to repeat themselves under time
 pressure. See [Halt-and-route conditions](#halt-and-route-conditions).
 
 **`app.retrieval`** — Loads the curated corpus (`corpus/*.md`, front matter
-parsed for `citation` and `topic`) and scores passages against a question by
-stopword-filtered token overlap. Deliberately simple and inspectable: there
-is no embedding index to audit, and the exact set of citations a question
-*can* surface is the exact set of `.md` files in `corpus/`.
+parsed for `citation` and `topic`) and ranks passages against a question by
+cosine similarity over Vertex `text-embedding-005` (768 dims, us-central1,
+called against the `:predict` endpoint — this model is not on the newer
+`embedContent` surface). Passage embeddings are cached process-wide
+(`_PASSAGE_EMBEDDING_CACHE`); the corpus is four documents, so re-embedding
+them on every question would be waste. If the embedding backend is
+unavailable for any reason — no credentials, a network failure, a malformed
+response — `retrieve()` falls back to the original stopword-filtered
+token-overlap scorer (`_retrieve_by_keyword`) rather than raising, which is
+also what keeps this project's test suite running unmocked and fast: there
+is no ADC in this build's local/CI environment, so every existing test
+exercises the fallback for real.
+
+Two guards sit on top of the embedding ranking, both chosen from a real
+measurement against this corpus rather than picked in the abstract:
+
+- **`SIMILARITY_FLOOR` (0.40)** — if the best-scoring passage is below this,
+  `retrieve()` returns nothing, the same as the keyword scorer finding zero
+  overlap, so `app.answering`'s existing refusal path fires.
+- **`AMBIGUITY_MARGIN` (0.02)** — if the top two passages score within this
+  of each other, `retrieve()` also returns nothing. Embeddings can rank two
+  genuinely different passages as an effective coin flip; guessing between
+  them on a five-court-day eviction deadline is worse than refusing and
+  routing to legal aid.
+
+The guards were sized against this measured table (Vertex
+`text-embedding-005`, this corpus):
+
+| query | deadline passage | defenses passage | correct passage | naive top-1 |
+|---|---|---|---|---|
+| "how many days do I have to respond" | 0.6259 | 0.5376 | deadline | correct |
+| "what defenses can I raise" | 0.3924 | 0.5318 | defenses | correct |
+| "my landlord never fixed the heating" | 0.4539 | 0.5824 | defenses | correct |
+| "how long before they kick me out" | 0.4571 | 0.4573 | — | **wrong, by 0.0002** |
+
+Embeddings alone get the first three right — including the heating question,
+which the old keyword scorer answered with *nothing* (zero token overlap) and
+so wrongly refused. The fourth is a near-tie a naive top-1 ranker would
+answer confidently and incorrectly; `AMBIGUITY_MARGIN` (0.02, two orders of
+magnitude above the 0.0002 gap, well under half of 0.0883 — the smallest gap
+in a row that must NOT be refused) catches it and refuses instead. **This is
+a real, by-design tradeoff, not a strict improvement**: three of four
+measured cases got better, one now correctly declines to guess where it
+previously would have (had this been naive top-1 embedding retrieval)
+guessed wrong. `SIMILARITY_FLOOR` (0.40) sits at the midpoint between the one
+measured off-topic score (an unrelated control sentence scored 0.3303
+against the deadline passage) and the lowest measured on-topic top score
+(0.4573).
 
 **`app.answering`** — Where the citation invariant lives (below). Takes a
 question and the retrieved passages, asks the model to answer using *only*

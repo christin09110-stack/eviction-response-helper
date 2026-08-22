@@ -60,7 +60,7 @@ uv pip install -e ".[dev]"
 # 2. Run the test suite (no cloud credentials needed — everything is
 #    exercised against substrate.fakes.FakeModel / FakeFirestore).
 uv run pytest -q
-# -> 109 passed
+# -> 123 passed
 
 # 3. Run the app locally against fakes (no GCP project needed to browse
 #    the console; /api/case and /api/ask will error without real Vertex
@@ -89,11 +89,18 @@ Dockerfile is only exercised by `gcloud run deploy --source .` inside
    excluded) from the date service was legally complete — which is not
    always the day someone was handed papers: substituted service completes
    ten days after mailing, service by mail alone adds five calendar days.
-3. **Ask a question, get a cited answer.** `app.retrieval` finds the
-   relevant passage in a small curated corpus of California statutory text;
-   `app.answering` asks the model to answer *using only that passage* and
-   rejects the answer outright if its citation isn't an exact, verbatim
-   match against the corpus (see below).
+3. **Ask a question, get a cited answer.** `app.retrieval` ranks the small
+   curated corpus of California statutory text by cosine similarity over
+   Vertex `text-embedding-005`, gated by two guards chosen from a real
+   measurement against this corpus: an absolute similarity floor, and an
+   ambiguity margin that refuses rather than guesses when the top two
+   passages score within 0.02 of each other (a real near-tie the measurement
+   found was 0.0002 apart — see [Retrieval](#retrieval)). If embeddings are
+   unavailable (no credentials, network failure) it falls back to the
+   original stopword-filtered token-overlap scorer. `app.answering` then
+   asks the model to answer *using only* the retrieved passages and rejects
+   the answer outright if its citation isn't an exact, verbatim match
+   against the corpus (see below).
 4. **Four halt conditions route to a human, not a guess.** Past deadline, a
    countersuit, an injury, or a criminal matter each stop the automated flow
    and assemble a legal-aid intake (`app.safety.build_referral`) from
@@ -116,6 +123,61 @@ Dockerfile is only exercised by `gcloud run deploy --source .` inside
    preference is threaded into the actual model prompt
    (`app.answering.STYLE_GUIDANCE`), not just reported back as a label.
 
+## Retrieval
+
+`app.retrieval.retrieve` ranks the corpus by cosine similarity over Vertex
+`text-embedding-005` (768 dims, `us-central1`, called against the `:predict`
+endpoint), not word overlap. That earned a real measurement against this
+corpus before the guards below were sized:
+
+| query | deadline passage | defenses passage | correct passage | naive top-1 |
+|---|---|---|---|---|
+| "how many days do I have to respond" | 0.6259 | 0.5376 | deadline | correct |
+| "what defenses can I raise" | 0.3924 | 0.5318 | defenses | correct |
+| "my landlord never fixed the heating" | 0.4539 | 0.5824 | defenses | correct |
+| "how long before they kick me out" | 0.4571 | 0.4573 | — | **wrong, by 0.0002** |
+
+Three of four improve over the old keyword scorer — the heating question in
+particular has almost no word overlap with the habitability passage and the
+keyword scorer returned nothing for it, wrongly refusing a question
+embeddings answer correctly. The fourth is a genuine near-tie: a naive top-1
+embedding ranker would answer it confidently and *wrong*, which for a tool
+telling someone facing eviction what the law says is worse than the old
+scorer's refusal.
+
+So retrieval keeps two guards on top of the ranking, both sized from the
+table above, not picked in the abstract:
+
+- **An absolute similarity floor (0.40).** Below it, `retrieve()` returns
+  nothing — the same outcome as the old scorer finding zero word overlap, so
+  the existing refusal-and-route-to-legal-aid path fires unchanged. Sized to
+  the midpoint between the one measured off-topic score (an unrelated
+  control sentence scored 0.3303 against the deadline passage) and the
+  lowest measured on-topic top score (0.4573).
+- **An ambiguity margin (0.02).** If the top two passages score within this
+  of each other, `retrieve()` also returns nothing rather than guess. It has
+  to catch the 0.0002 gap above while leaving the smallest genuine gap in the
+  table (0.0883, the deadline question) untouched; 0.02 clears both with
+  room to spare on either side.
+
+**This is not a strict improvement, and the guard means ambiguous questions
+are refused by design.** A tenant asking something that lands squarely
+between two passages will get the same "I would rather say nothing than
+guess" refusal the corpus-miss case gets, even though the corpus does, in a
+sense, contain relevant material. That tradeoff is deliberate: the product's
+invariant is never asserting a legal statement it cannot cite, and a
+coin-flip between two real statutes is not something this tool is willing to
+guess at either.
+
+If the embedding backend is unavailable — no ADC, a network failure, a
+non-2xx or malformed response — `retrieve()` falls back to the original
+stopword-filtered token-overlap scorer (`_retrieve_by_keyword`) rather than
+raising. That fallback is also what keeps this project's test suite running
+unmocked: there is no ADC in this build's local/CI environment, so every
+pre-existing test exercises the fallback for real, and the embedding path
+itself is covered by tests that mock the raw Vertex `:predict` response
+shape (`{"predictions": [{"embeddings": {"values": [...]}}]}`).
+
 ## The citation invariant
 
 `app.answering.answer_question` will not return a legal statement unless
@@ -137,6 +199,10 @@ eviction case is not a cosmetic bug.
 
 - **Backend:** Python 3.13, FastAPI, Pydantic
 - **Model:** Google Gemini (`gemini-3.5-flash` via Vertex AI, `substrate.gemini.GeminiModel`)
+- **Retrieval:** Vertex AI `text-embedding-005` (`us-central1`, `:predict`),
+  cosine similarity with an absolute floor and an ambiguity margin, falling
+  back to token-overlap scoring when embeddings are unavailable — see
+  [Retrieval](#retrieval)
 - **Storage:** Google Cloud Firestore (audit trail, case state, per-user
   explanation-style preference)
 - **Observability:** OpenTelemetry, exported to Google Cloud Trace and Cloud
@@ -147,7 +213,9 @@ eviction case is not a cosmetic bug.
   typed fallback
 - **Hosting:** Google Cloud Run
 - **Testing:** pytest, `substrate.fakes.FakeModel` / `FakeFirestore` (no
-  network or credentials required for the test suite), axe-core (WCAG audit)
+  network or credentials required for the test suite), axe-core (WCAG audit).
+  The embedding path is covered by tests that mock the raw Vertex `:predict`
+  response shape directly rather than a higher-level SDK object.
 
 `substrate/` is a vendored, shared package (Firestore store, Gemini model
 adapter, telemetry, a Pub/Sub-fronting FastAPI factory) built for and reused
@@ -224,6 +292,17 @@ and the check.
   and every revealed UI state — deadline shown, halt shown, answer shown —
   and both the light and dark color palettes): zero violations. Every
   interactive control measured at least 48×48px.
+- **An unconditional `google.auth.default()` call would have made every test
+  in the suite slow, not just uncredentialed.** With no ADC configured
+  (there is none in this sandbox), the call doesn't fail fast — it falls
+  through to a GCE metadata-server probe that retries against an
+  unreachable server before giving up, measured at roughly 12 seconds. Every
+  test that calls `app.retrieval.retrieve()` would have paid that cost.
+  `app.retrieval._adc_likely_available()` checks
+  `GOOGLE_APPLICATION_CREDENTIALS`, the gcloud well-known ADC file, and
+  `K_SERVICE` (always set on Cloud Run) first, with no network call, so the
+  full 123-test suite still runs in well under a second, and the real ADC
+  path is exercised for real, unaffected, in production.
 
 ## Known limitations
 
