@@ -24,6 +24,49 @@ let lastAnswerStyle = "plain";
 
 const $ = (id) => document.getElementById(id);
 
+// Presentation-only day count for the hero: the backend's app.deadlines
+// already computed the deadline date and put it in reply.data.deadline; this
+// just re-expresses that same date as "N days left" for the headline number.
+// It duplicates no legal logic -- it is calendar subtraction on a date the
+// server already produced.
+function daysUntil(isoDate) {
+  const [y, m, d] = isoDate.split("-").map(Number);
+  const deadlineUTC = Date.UTC(y, m - 1, d);
+  const now = new Date();
+  const todayUTC = Date.UTC(now.getFullYear(), now.getMonth(), now.getDate());
+  return Math.round((deadlineUTC - todayUTC) / 86400000);
+}
+
+function showHeroDeadline(isoDate, deadlineSentence) {
+  $("hero-pending").hidden = true;
+  $("hero-active").hidden = false;
+  $("deadline-text").textContent = deadlineSentence;
+
+  const remaining = daysUntil(isoDate);
+  const numberEl = $("hero-days-number");
+  const labelEl = $("hero-days-label");
+  if (remaining <= 0) {
+    numberEl.textContent = "Today";
+    labelEl.textContent = "is the deadline";
+  } else {
+    numberEl.textContent = String(remaining);
+    labelEl.textContent = remaining === 1 ? "day left" : "days left";
+  }
+  numberEl.classList.toggle("is-urgent", remaining <= 2);
+}
+
+function resetHero() {
+  $("hero-pending").hidden = false;
+  $("hero-active").hidden = true;
+}
+
+const ANSWER_ICON_GROUNDED =
+  '<path d="M7 8h10M7 12h7" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"/>' +
+  '<path d="M4.5 5.5h15v10h-6l-3.5 3v-3h-5.5v-10Z" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linejoin="round"/>';
+const ANSWER_ICON_REFUSAL =
+  '<circle cx="12" cy="12" r="8.2" fill="none" stroke="currentColor" stroke-width="1.7"/>' +
+  '<path d="M6.7 6.7l10.6 10.6" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"/>';
+
 async function postJSON(url, body) {
   const response = await fetch(url, {
     method: "POST",
@@ -54,23 +97,24 @@ $("photo").addEventListener("change", async (event) => {
     return;
   }
 
-  $("deadline-card").hidden = true;
   $("halt-card").hidden = true;
   $("draft-card").hidden = true;
 
   if (reply.kind === "retake") {
+    resetHero();
     status.textContent = reply.text;
   } else if (reply.kind === "halt") {
+    resetHero();
     status.textContent = "";
     $("halt-text").textContent = reply.text;
     $("halt-card").hidden = false;
   } else if (reply.kind === "case_started") {
     status.textContent = "Summons read successfully.";
-    $("deadline-text").textContent = reply.text;
-    $("deadline-card").hidden = false;
+    showHeroDeadline(reply.data.deadline, reply.text);
     $("draft-status").textContent = "";
     $("draft-card").hidden = false;
   } else {
+    resetHero();
     status.textContent = reply.text || "Something unexpected happened. Please try again.";
   }
 });
@@ -138,6 +182,9 @@ $("send").addEventListener("click", async () => {
   } catch {
     $("answer-text").textContent = "Could not reach the server. Check your connection and try again.";
     $("answer-cites").textContent = "";
+    $("answer-panel").classList.remove("is-refusal");
+    $("answer-heading").textContent = "Answer";
+    $("answer-icon").innerHTML = ANSWER_ICON_GROUNDED;
     $("answer").hidden = false;
     return;
   }
@@ -146,6 +193,16 @@ $("send").addEventListener("click", async () => {
   $("answer-text").textContent = reply.text;
   const citations = (reply.data && reply.data.citations) || [];
   $("answer-cites").textContent = citations.length ? `Source: ${citations.join("; ")}` : "";
+
+  // The refusal state matters as much as a correct answer: this tool would
+  // rather say nothing than guess. grounded === false means answer_question
+  // found no citation it could stand behind (see app.answering.REFUSAL) --
+  // that gets its own considered presentation, not error styling.
+  const grounded = !reply.data || reply.data.grounded !== false;
+  $("answer-panel").classList.toggle("is-refusal", !grounded);
+  $("answer-heading").textContent = grounded ? "Answer" : "No citation found";
+  $("answer-icon").innerHTML = grounded ? ANSWER_ICON_GROUNDED : ANSWER_ICON_REFUSAL;
+
   $("feedback-status").textContent = "";
   $("answer").hidden = false;
 });

@@ -6,6 +6,9 @@
   <title>Eviction Response Helper</title>
   <meta name="description" content="Reads your California eviction summons, works out your real deadline, answers questions with a citation attached, and drafts your response for you to review and file yourself.">
   <meta name="color-scheme" content="light dark">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Archivo:wght@600;700;800&family=Public+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="/static/app.css">
 </head>
 <body>
@@ -15,29 +18,62 @@
     <h1>Eviction Response Helper</h1>
     <p class="limit">
       For <strong>California unlawful detainer (eviction) cases only</strong>.
-      This tool explains what the law says and prepares your paperwork —
-      <strong>you file it yourself</strong>. It is not a lawyer and it does
-      not give legal advice.
+      This tool explains the law and prepares your paperwork —
+      <strong>you file it yourself</strong>. It is not a lawyer.
     </p>
   </header>
 
   <main id="main">
-    <section class="card" aria-labelledby="step1-heading">
-      <h2 id="step1-heading">1. Photograph your summons</h2>
-      <p class="hint">Lay the first page flat in good light so all four corners are visible.</p>
-      <label for="photo">Take or choose a photo</label>
-      <input class="file-input" id="photo" type="file" accept="image/*" capture="environment">
-      <p id="photo-status" role="status" aria-live="polite"></p>
-    </section>
+    <section class="hero" id="hero" aria-labelledby="hero-heading" aria-live="polite">
+      <div class="hero-state" id="hero-pending">
+        <p class="hero-eyebrow">Your deadline</p>
+        <h2 id="hero-heading">Find out your exact deadline</h2>
+        <p class="hero-body">
+          Most California eviction responses are due in five court days.
+          Photograph your summons below and this works out your real date —
+          not an estimate.
+        </p>
+      </div>
 
-    <section class="card" id="deadline-card" hidden aria-labelledby="deadline-heading">
-      <h2 id="deadline-heading">Your deadline</h2>
-      <p class="deadline-value" id="deadline-text" role="status" aria-live="assertive"></p>
+      <div class="hero-state" id="hero-active" hidden>
+        <p class="hero-eyebrow">Your deadline</p>
+        <p class="hero-count">
+          <span class="hero-count-number" id="hero-days-number">—</span>
+          <span class="hero-count-label" id="hero-days-label">days left</span>
+        </p>
+        <p class="hero-date" id="deadline-text"></p>
+        <p class="hero-note">Mark this date. Everything else here works backward from it.</p>
+      </div>
     </section>
 
     <section class="card" id="halt-card" hidden aria-labelledby="halt-heading">
-      <h2 id="halt-heading">Talk to a person now</h2>
+      <div class="card-icon-row">
+        <svg class="card-icon urgent" viewBox="0 0 24 24" aria-hidden="true" focusable="false">
+          <path d="M12 3 2 20h20L12 3Z" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"/>
+          <path d="M12 9.5v5" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/>
+          <circle cx="12" cy="17.2" r="1" fill="currentColor"/>
+        </svg>
+        <h2 id="halt-heading">Talk to a person now</h2>
+      </div>
       <p id="halt-text" role="alert"></p>
+    </section>
+
+    <section class="card" aria-labelledby="step1-heading">
+      <h2 id="step1-heading">1. Photograph your summons</h2>
+      <p class="hint">Lay the first page flat in good light so all four corners are visible.</p>
+
+      <label class="photo-picker" for="photo">
+        <svg class="photo-picker-icon" viewBox="0 0 24 24" aria-hidden="true" focusable="false">
+          <path d="M4 8.5A1.5 1.5 0 0 1 5.5 7h2.4l.9-1.5A1.5 1.5 0 0 1 10.1 4.7h3.8a1.5 1.5 0 0 1 1.3.8l.9 1.5h2.4A1.5 1.5 0 0 1 20 8.5v9A1.5 1.5 0 0 1 18.5 19h-13A1.5 1.5 0 0 1 4 17.5v-9Z" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linejoin="round"/>
+          <circle cx="12" cy="13" r="3.4" fill="none" stroke="currentColor" stroke-width="1.7"/>
+        </svg>
+        <span class="photo-picker-text">
+          <span class="photo-picker-title">Take a photo of your summons</span>
+          <span class="photo-picker-sub">or choose one from your files</span>
+        </span>
+      </label>
+      <input class="visually-hidden" id="photo" type="file" accept="image/*" capture="environment">
+      <p id="photo-status" role="status" aria-live="polite"></p>
     </section>
 
     <section class="card" aria-labelledby="step2-heading">
@@ -47,19 +83,32 @@
       <input id="q" type="text" autocomplete="off" inputmode="text">
       <div class="button-row">
         <button id="speak" type="button">
-          <span aria-hidden="true">🎤</span> Speak instead
+          <svg class="btn-icon" viewBox="0 0 24 24" aria-hidden="true" focusable="false">
+            <rect x="9" y="3" width="6" height="11" rx="3" fill="none" stroke="currentColor" stroke-width="1.7"/>
+            <path d="M6 11a6 6 0 0 0 12 0M12 17v3.2M9 20.5h6" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"/>
+          </svg>
+          Speak instead
         </button>
         <button id="send" type="button" class="primary">Ask</button>
       </div>
       <p id="speech-status" role="status" aria-live="polite" class="visually-hidden-when-empty"></p>
 
       <div id="answer" hidden>
-        <h3>Answer</h3>
-        <p id="answer-text" aria-live="polite"></p>
-        <p class="cites" id="answer-cites"></p>
-        <button id="play" type="button">
-          <span aria-hidden="true">🔊</span> Play answer aloud
-        </button>
+        <div class="answer-panel" id="answer-panel">
+          <div class="answer-head" id="answer-head">
+            <svg class="card-icon" id="answer-icon" viewBox="0 0 24 24" aria-hidden="true" focusable="false"></svg>
+            <h3 id="answer-heading">Answer</h3>
+          </div>
+          <p id="answer-text" aria-live="polite"></p>
+          <p class="cites" id="answer-cites"></p>
+          <button id="play" type="button">
+            <svg class="btn-icon" viewBox="0 0 24 24" aria-hidden="true" focusable="false">
+              <path d="M4 9.5v5h3.6L13 19V5L7.6 9.5H4Z" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linejoin="round"/>
+              <path d="M16.2 8.8a4.5 4.5 0 0 1 0 6.4" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"/>
+            </svg>
+            Play answer aloud
+          </button>
+        </div>
         <fieldset class="feedback">
           <legend>Did that explanation make sense?</legend>
           <button type="button" class="feedback-btn" data-landed="true">Yes, that helped</button>
