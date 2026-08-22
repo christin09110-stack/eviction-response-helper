@@ -12,6 +12,8 @@ dependencies = [
     "opentelemetry-exporter-gcp-trace>=1.6.0",
     "fastapi>=0.111.0",
     "uvicorn>=0.30.0",
+    "reportlab>=4.2.0",
+    "python-multipart>=0.0.9",
 ]
 
 [project.optional-dependencies]
