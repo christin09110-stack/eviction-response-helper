@@ -36,12 +36,41 @@ EMBEDDING_MODEL = "text-embedding-005"
 # against either boundary.
 SIMILARITY_FLOOR = 0.40
 
-# AMBIGUITY_MARGIN: if the top two passages score within this of each other,
-# refuse rather than guess. Must catch the 0.0002 gap in the kick-out row
-# above and must NOT catch the smallest genuine gap in the table, 0.0883
-# (deadline query: 0.6259 vs 0.5376). 0.02 sits two orders of magnitude above
-# the near-tie and well under half of the smallest real gap, so it has room
-# on both sides rather than being tuned to the exact numbers above.
+# AMBIGUITY_MARGIN: how close two scores have to be before the ranking is
+# treated as unable to separate them. It does NOT refuse.
+#
+# It used to. An earlier version of this file returned nothing whenever the
+# top two passages landed within the margin, reasoning that a coin flip
+# between two different topics was worse than silence. Measured against the
+# deployed service that guard refused the exact question this product exists
+# to answer, in every phrasing a frightened tenant would actually use:
+#
+#   query                                     1167     service   gap
+#   "how long do I have to respond"           0.6373   0.6381    0.0008  refused
+#   "what is the deadline to file my answer"  0.6462   0.6481    0.0020  refused
+#   "How many days do I have to respond?"     0.6839   0.6665    0.0175  refused
+#
+# The two close passages there are not rival answers: CCP 1167 says five court
+# days, and the service-methods passage says when the clock starts. Both
+# belong in the answer -- "when is my response due" only succeeded because it
+# cleared the margin and got to cite both. Refusing because two relevant
+# sources tie is wrong, so a near-tie now WIDENS the context instead: the
+# whole tie group goes to the model together, and the `limit` in retrieve()
+# is never allowed to cut through it (_top_passages below).
+#
+# This cannot loosen the citation invariant. app.answering checks every
+# citation the model returns for exact membership in the passages it was
+# given, so an extra passage can only ever produce a real citation the tenant
+# can look up -- never a fabricated one. And it handles the original
+# motivating near-tie better than refusing did: the model gets the deadline
+# passage AND the defences passage rather than silently getting one of them.
+#
+# 0.02 is unchanged, and against this three-document corpus at the default
+# limit of 3 it currently has no observable effect at all -- every passage
+# reaches the model either way. It is kept, and enforced by _top_passages,
+# so that a smaller limit or a larger corpus cannot quietly reintroduce the
+# coin flip. Sized to sit above the largest measured near-tie gap (0.0175)
+# and below the smallest measured genuine win (0.0321, "five day deadline").
 AMBIGUITY_MARGIN = 0.02
 
 _CLOUD_PLATFORM_SCOPE = "https://www.googleapis.com/auth/cloud-platform"
@@ -206,17 +235,41 @@ def _passage_embeddings(
 
 
 def _apply_guards(scored: list[tuple[float, Passage]]) -> list[tuple[float, Passage]]:
-    """Refuse (return []) rather than guess, per the two guards documented
-    above SIMILARITY_FLOOR and AMBIGUITY_MARGIN.
+    """Rank, and refuse (return []) only when nothing clears SIMILARITY_FLOOR.
+
+    The floor is the only refusal. A near-tie is handled by _top_passages,
+    which keeps the tied passages together instead of dropping them -- see
+    the AMBIGUITY_MARGIN note above for why refusing there was wrong.
     """
     if not scored:
         return []
     scored = sorted(scored, key=lambda pair: pair[0], reverse=True)
     if scored[0][0] < SIMILARITY_FLOOR:
         return []
-    if len(scored) >= 2 and (scored[0][0] - scored[1][0]) < AMBIGUITY_MARGIN:
-        return []
     return scored
+
+
+def _tie_cluster_size(ranked: list[tuple[float, Passage]]) -> int:
+    """How many of the top-ranked passages sit within AMBIGUITY_MARGIN of the
+    best score -- i.e. how many the ranking cannot tell apart.
+
+    Measured from the top score rather than chained pair-by-pair, so the
+    group stays bounded by the margin instead of walking down the whole list
+    one small step at a time. Every passage within the margin counts, not
+    just the runner-up: a third passage tied as closely as the second has
+    exactly as much claim to be in the answer, and dropping it would be the
+    same arbitrary choice the margin exists to prevent.
+    """
+    if not ranked:
+        return 0
+    top = ranked[0][0]
+    return sum(1 for score, _ in ranked if top - score < AMBIGUITY_MARGIN)
+
+
+def _top_passages(ranked: list[tuple[float, Passage]], limit: int) -> list[Passage]:
+    """The top `limit` passages, widened so the limit never cuts inside a
+    tie group (see AMBIGUITY_MARGIN)."""
+    return [passage for _, passage in ranked[: max(limit, _tie_cluster_size(ranked))]]
 
 
 def _embedding_rank(
@@ -243,4 +296,4 @@ def retrieve(query: str, passages: list[Passage], limit: int = 3) -> list[Passag
     ranked = _embedding_rank(query, passages, config)
     if ranked is None:
         return _retrieve_by_keyword(query, passages, limit)
-    return [passage for _, passage in ranked[:limit]]
+    return _top_passages(ranked, limit)
