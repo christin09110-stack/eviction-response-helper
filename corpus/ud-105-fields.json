@@ -1,0 +1,15 @@
+{
+  "form_id": "UD-105",
+  "title": "Answer — Unlawful Detainer",
+  "fields": [
+    {"id": "case_number", "label": "Case number", "source": "summons"},
+    {"id": "court_branch", "label": "Court branch", "source": "summons"},
+    {"id": "defendant_name", "label": "Defendant name", "source": "user"},
+    {"id": "plaintiff_name", "label": "Plaintiff name", "source": "summons"},
+    {"id": "general_denial", "label": "General denial", "source": "user"},
+    {"id": "defense_habitability", "label": "Breach of warranty of habitability", "source": "assessed"},
+    {"id": "defense_retaliation", "label": "Retaliatory eviction", "source": "assessed"},
+    {"id": "defense_notice", "label": "Defective notice", "source": "assessed"},
+    {"id": "defense_rent_accepted", "label": "Rent accepted after notice", "source": "assessed"}
+  ]
+}
