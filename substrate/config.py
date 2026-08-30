@@ -1,7 +1,9 @@
 import os
 from dataclasses import dataclass
 
-DEFAULT_PROJECT = "total-fiber-399801"
+# No default project id: hard-coding one means a fork silently deploys
+# against somebody else's account. GCP_PROJECT is required.
+DEFAULT_PROJECT = ""
 # Cloud Run, Firestore, Pub/Sub, and Cloud Run Jobs are regional and live in
 # us-central1. Gemini model access via google-genai/Vertex is routed through
 # GOOGLE_CLOUD_LOCATION, but the `gemini-3.5-flash` model is only served from
