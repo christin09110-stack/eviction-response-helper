@@ -1,6 +1,7 @@
 # Eviction Response Helper
 
-A mobile-first tool that helps a tenant respond to a California eviction
+A web tool — usable on a phone at the door, or on a desktop in an advocate's
+office — that helps a tenant respond to a California eviction
 (unlawful detainer) summons: it reads the summons, works out the real
 response deadline, answers questions with a citation attached, and prepares
 an Answer for the tenant to review and file themselves.
@@ -40,6 +41,40 @@ to turn before it arrives.
 
 Deployed on Google Cloud Run:
 **https://legal-navigator-95953931159.us-central1.run.app**
+
+## Try it in two minutes
+
+No install, no credentials. `fixtures/sample-summons.png` is a synthetic
+SUM-130 made for this purpose — there is no real case anywhere in this
+project.
+
+1. Open **https://legal-navigator-95953931159.us-central1.run.app**
+2. **Step 1** — upload `fixtures/sample-summons.png` (download it from this
+   repo first). It reads case `26UD004182`, Alameda County, served
+   24 August 2026 by personal service, and returns a deadline of
+   **Tuesday 8 September 2026**. That is ten court days — the tenth would be
+   the 7th, but the 7th is Labor Day, so the court is closed.
+3. **Step 2** — ask *"What happens if I miss the deadline?"* You get an answer
+   citing Cal. Code Civ. Proc. § 1167. Then ask *"Can I sue my landlord for
+   emotional distress?"* — outside the corpus, so it refuses and offers a
+   legal-aid intake rather than answering.
+4. **Step 3** — enter a name, tick what applies, and it returns a filled
+   UD-105 as a PDF, stamped `PREPARED DRAFT — NOT FILED`.
+5. **Step 4** — the court from your own summons, your deadline, the three
+   ways to file, and the fee-waiver form.
+
+The fixture's deadline is 8 September 2026. On or after 9 September the
+safety check fires instead and routes to a human — correct behaviour, but you
+will not see the countdown.
+
+Or drive the same flow from a terminal:
+
+```bash
+U=https://legal-navigator-95953931159.us-central1.run.app
+curl -s -X POST $U/api/case -F user_id=demo -F photo=@fixtures/sample-summons.png
+curl -s -X POST $U/api/ask -H 'content-type: application/json' \
+  -d '{"user_id":"demo","question":"What happens if I miss the deadline?"}'
+```
 
 ## Spin-up, step by step
 
@@ -87,10 +122,11 @@ Dockerfile is only exercised by `gcloud run deploy --source .` inside
    method. A low-confidence read or a missing service date asks for a
    retake rather than guessing — a wrong date here is a missed deadline.
 2. **Compute the real deadline.** `app.deadlines.compute_response_deadline`
-   counts five *court* days (Saturdays, Sundays, and judicial holidays
-   excluded) from the date service was legally complete — which is not
-   always the day someone was handed papers: substituted service completes
-   ten days after mailing, service by mail alone adds five calendar days.
+   counts ten *court* days (Saturdays, Sundays, and California judicial
+   holidays excluded) from the date service was legally complete — which is
+   not always the day someone was handed papers: substituted service
+   completes ten days after mailing, and service by mail adds five more
+   court days (§ 1167 as amended by AB 2347, operative 1 January 2025).
 3. **Ask a question, get a cited answer.** `app.retrieval` ranks the small
    curated corpus of California statutory text by cosine similarity over
    Vertex `text-embedding-005`, with an absolute similarity floor sized from

@@ -23,11 +23,12 @@ of them, nowhere to turn before it arrives.
 A tenant photographs their summons. A vision call reads the case number,
 court, plaintiff, service date, and service method, and asks for a retake
 rather than guessing on a low-confidence read — a wrong service date here is
-a missed deadline. The tool computes the real response window: five *court*
-days (weekends and judicial holidays excluded) from the date service was
-legally complete, which isn't always the day someone was handed papers —
-substituted service adds ten days before the clock even starts, service by
-mail adds five calendar days on top.
+a missed deadline. The tool computes the real response window: ten *court*
+days (weekends and California judicial holidays excluded) from the date
+service was legally complete, which isn't always the day someone was handed
+papers — substituted service adds ten days before the clock even starts, and
+service by mail adds five more court days on top (Cal. Code Civ. Proc.
+§ 1167, as amended by AB 2347, operative 1 January 2025).
 
 A tenant can then ask a question and get an answer with a citation attached,
 drawn from a small curated corpus of California statutory text. If the

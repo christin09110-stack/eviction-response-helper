@@ -322,7 +322,7 @@ def test_predict_embeddings_parses_the_real_vertex_predict_response_shape():
 # The last three rows below are the bug this test exists for: every one of
 # them is a plain-English way of asking the single question this product is
 # built to answer, every one scored comfortably above the floor, and every one
-# was refused outright because §1167 ("five court days") and the
+# was refused outright because §1167 ("ten court days") and the
 # service-methods passage ("when the clock starts") -- two passages that are
 # both relevant and belong in the same answer -- landed within a hair of each
 # other.
