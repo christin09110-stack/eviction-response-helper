@@ -63,6 +63,42 @@ def test_needs_retake_when_the_service_date_is_missing():
     assert needs_retake(fields).reason == "missing_served_on"
 
 
+def test_a_landlord_notice_is_not_mistaken_for_a_summons():
+    """The shape a three-day notice to pay rent or quit actually produced.
+
+    Run against a real § 1161 notice, the model returned the landlord as
+    "plaintiff", the notice's own service date, personal service, and high
+    confidence -- everything compute_response_deadline needs to produce a
+    § 1167 countdown off a document filed before any case exists. No case
+    number and no court name is what separates the two, so that is what is
+    checked.
+    """
+    fields = SummonsFields(
+        None, None, "Northgate Residential Partners, LLC",
+        date(2026, 8, 10), ServiceMethod.PERSONAL, 0.95,
+    )
+    request = needs_retake(fields)
+    assert request is not None
+    assert request.reason == "not_a_summons"
+    assert "case number" in request.guidance
+
+
+def test_a_case_number_alone_is_enough_to_be_a_summons():
+    """Photographed at an angle, the court-name box can be the part that is
+    cut off. One of the two identifiers is enough -- only a court issues a
+    document carrying either."""
+    fields = SummonsFields("24UD1", None, "Acme", date(2026, 8, 3), ServiceMethod.PERSONAL, 0.95)
+    assert needs_retake(fields) is None
+
+
+def test_a_blurred_photo_is_told_to_retake_before_being_called_a_notice():
+    """Ordering matters. A dark photo of a real summons reads as nulls too;
+    telling that tenant they photographed the wrong document sends them
+    looking for a paper they are already holding."""
+    fields = SummonsFields(None, None, None, None, None, 0.2)
+    assert needs_retake(fields).reason == "low_confidence"
+
+
 def test_no_retake_needed_for_a_clean_read():
     fields = SummonsFields("24UD1", "Alameda", "Acme", date(2026, 8, 3), ServiceMethod.PERSONAL, 0.95)
     assert needs_retake(fields) is None

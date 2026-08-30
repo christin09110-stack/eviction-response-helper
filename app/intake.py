@@ -103,6 +103,26 @@ def needs_retake(fields: SummonsFields) -> RetakeRequest | None:
             guidance="Take the photo again in brighter light, holding the phone flat "
             "above the page so all four corners are visible.",
         )
+    # A confident read that found neither a case number nor a court name did not
+    # read a summons. This matters more than it looks: photographed with a
+    # three-day notice to pay rent or quit (Cal. Code Civ. Proc. § 1161), the
+    # model returns a real service date and a real service method off that
+    # notice, and everything downstream then computes a § 1167 response
+    # deadline -- the wrong statute, applied to a document filed before any
+    # case exists -- and shows it as a countdown the tenant has no reason to
+    # doubt. Only the court issues a summons, and it carries a case number and
+    # the court's name; a landlord's notice carries neither. That is a
+    # structural fact about the documents, so it is checked here rather than
+    # asked of the model.
+    if fields.case_number is None and fields.court_branch is None:
+        return RetakeRequest(
+            reason="not_a_summons",
+            guidance="This does not look like a court summons. A summons is issued by "
+            "the court and carries a case number and the court's name. If what you "
+            "have is a notice from your landlord, this tool cannot work out a "
+            "deadline from it -- it reads the court papers that come after. "
+            "Photograph the page with the case number on it.",
+        )
     if fields.served_on is None:
         return RetakeRequest(
             reason="missing_served_on",
