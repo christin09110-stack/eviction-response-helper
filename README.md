@@ -30,7 +30,7 @@ only what the law says.
 
 Legal aid organizations turn away roughly half of everyone who asks them for
 help, because they don't have the staff to take the case. In California, a
-tenant served with an unlawful detainer summons has **five court days** to
+tenant served with an unlawful detainer summons has **10 court days** to
 file a written response (Cal. Code Civ. Proc. § 1167) — miss it, and the
 landlord can take a default judgment without a hearing. This tool exists for
 the gap between those two facts: someone who has a hard deadline and nowhere
@@ -172,7 +172,7 @@ measurement rather than picked in the abstract:
 The margin originally returned nothing on a near-tie, on the theory that a
 coin flip between two statutes was worse than silence. Measured against the
 deployed service, that guard refused the single question this product exists
-to answer — in every phrasing a frightened tenant with five days actually
+to answer — in every phrasing a frightened tenant on a ten-day clock actually
 uses. Freshly measured, `text-embedding-005`, `us-central1`, against all
 three corpus documents:
 
@@ -188,7 +188,7 @@ three corpus documents:
 The three refusals are the plain-English phrasings; the three successes are
 the ones that happen to use corpus vocabulary. And the two passages tying in
 the refused rows are not rival answers to the same question — CCP § 1167
-says *five court days*, and the service-methods passage says *when the clock
+says *10 court days*, and the service-methods passage says *when the clock
 starts*. Both belong in the answer. The proof is row two: "when is my
 response due" cleared the margin and succeeded precisely by citing both.
 

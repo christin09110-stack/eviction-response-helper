@@ -8,7 +8,7 @@ PASSAGES = [
     Passage(
         citation="Cal. Code Civ. Proc. § 1167",
         topic="time to respond",
-        text="A defendant must file a written response within five days after service.",
+        text="A defendant must file a written response within 10 days, excluding weekends and judicial holidays, after service.",
     )
 ]
 
@@ -18,7 +18,7 @@ def _reply(text: str, citations: list[str]) -> str:
 
 
 def test_returns_a_grounded_answer_with_its_citation():
-    model = FakeModel([_reply("You have five days to respond.", ["Cal. Code Civ. Proc. § 1167"])])
+    model = FakeModel([_reply("You have 10 court days to respond.", ["Cal. Code Civ. Proc. § 1167"])])
     answer = answer_question(model, "how long do I have?", PASSAGES)
     assert isinstance(answer, Answer)
     assert answer.grounded is True
@@ -28,7 +28,7 @@ def test_returns_a_grounded_answer_with_its_citation():
 def test_prompt_contains_the_retrieved_passage_text():
     model = FakeModel([_reply("Five days.", ["Cal. Code Civ. Proc. § 1167"])])
     answer_question(model, "how long?", PASSAGES)
-    assert "within five days after service" in model.calls[0]["prompt"]
+    assert "within 10 days" in model.calls[0]["prompt"]
 
 
 def test_answer_is_ungrounded_when_no_passages_were_retrieved():
@@ -57,7 +57,7 @@ def test_INVARIANT_answer_with_no_citation_is_rejected():
 
 
 def test_malformed_model_reply_is_ungrounded_not_a_crash():
-    answer = answer_question(FakeModel(["five days probably"]), "how long?", PASSAGES)
+    answer = answer_question(FakeModel(["ten days probably"]), "how long?", PASSAGES)
     assert answer.grounded is False
 
 
@@ -85,7 +85,7 @@ def test_citation_matching_corpus_only_by_prefix_is_rejected():
     """A citation that is a strict prefix of a real corpus citation refers to
     a document this navigator cannot verify verbatim, so it must be treated
     exactly like a fabricated citation."""
-    reply = _reply("You have five days.", ["Cal. Code Civ. Proc. § 116"])
+    reply = _reply("You have 10 court days.", ["Cal. Code Civ. Proc. § 116"])
     answer = answer_question(FakeModel([reply]), "how long?", PASSAGES)
     assert answer.grounded is False
     assert answer.citations == []
@@ -101,7 +101,7 @@ def test_one_fabricated_citation_among_real_ones_rejects_the_whole_answer():
     """A citations list mixing a real citation with a fabricated one must be
     rejected in full -- every citation must be verifiable, not just some."""
     reply = _reply(
-        "You have five days.",
+        "You have 10 court days.",
         ["Cal. Code Civ. Proc. § 1167", "Cal. Code Civ. Proc. § 9999"],
     )
     answer = answer_question(FakeModel([reply]), "how long?", PASSAGES)

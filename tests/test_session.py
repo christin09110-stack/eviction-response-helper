@@ -32,7 +32,8 @@ def test_start_case_computes_and_stores_the_deadline():
     store = _store()
     reply = start_case(FakeModel([_summons()]), store, "u1", b"png", TODAY)
     assert reply.kind == "case_started"
-    assert reply.data["deadline"] == "2026-08-10"
+    # Mon 3 Aug served, personal service: ten court days = Mon 17 Aug.
+    assert reply.data["deadline"] == "2026-08-17"
     assert store.get("cases", "u1")["case_number"] == "24UD001234"
 
 
@@ -54,7 +55,7 @@ def test_ask_returns_a_grounded_answer():
     store = _store()
     start_case(FakeModel([_summons()]), store, "u1", b"png", TODAY)
     model = FakeModel([json.dumps({
-        "text": "You have five days to file a response.",
+        "text": "You have 10 court days to file a response.",
         "citations": ["Cal. Code Civ. Proc. § 1167"],
     })])
     reply = ask(model, store, "u1", "how long do I have to respond")

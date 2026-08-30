@@ -3,6 +3,12 @@ name = "legal-navigator"
 version = "0.1.0"
 requires-python = ">=3.10"
 dependencies = [
+    # Pinned below 2.35.0. That release percent-encodes path segments, so
+    # Firestore's "(default)" database becomes "%28default%29" and every query
+    # fails with `400 Invalid database id`. This container installs from
+    # pyproject with no lock file, so a rebuild re-resolves and picks it up.
+    # It took a sibling project's read API down on a routine redeploy.
+    "google-api-core>=2.34.0,<2.35.0",
     "google-adk>=2.7.1",
     "google-genai>=2.19.0",
     "google-cloud-firestore>=2.16.0",

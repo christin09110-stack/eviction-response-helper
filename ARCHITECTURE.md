@@ -88,7 +88,7 @@ fields rather than raising or fabricating a value. `needs_retake` decides
 whether what came back is usable enough to proceed.
 
 **`app.deadlines`** — Pure date arithmetic implementing Cal. Code Civ. Proc.
-§ 1167: five *court* days (weekends and holidays excluded) from the day
+§ 1167: 10 *court* days (weekends and holidays excluded) from the day
 service was legally complete, which service method shifts (personal:
 immediate; substituted: +10 days; mail: +5 days). Deliberately has no
 dependency on the model, the store, or the network — it is a pure function

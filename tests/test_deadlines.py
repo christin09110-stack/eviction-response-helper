@@ -5,39 +5,43 @@ import pytest
 from app.deadlines import ServiceMethod, compute_response_deadline, days_remaining
 
 
-def test_personal_service_five_court_days_from_a_monday():
-    # Mon 3 Aug served -> Tue,Wed,Thu,Fri,Mon = Mon 10 Aug
-    assert compute_response_deadline(date(2026, 8, 3), ServiceMethod.PERSONAL) == date(2026, 8, 10)
+def test_personal_service_is_ten_court_days_from_a_monday():
+    # CCP 1167(a) as amended by AB 2347: ten court days, not five.
+    # Mon 3 Aug served -> 4,5,6,7 / 10,11,12,13,14 / 17 = Mon 17 Aug
+    assert compute_response_deadline(date(2026, 8, 3), ServiceMethod.PERSONAL) == date(2026, 8, 17)
 
 
 def test_weekends_are_excluded():
-    # Thu 6 Aug served -> Fri,Mon,Tue,Wed,Thu = Thu 13 Aug
-    assert compute_response_deadline(date(2026, 8, 6), ServiceMethod.PERSONAL) == date(2026, 8, 13)
+    # Thu 6 Aug served -> 7 / 10-14 / 17-20 = Thu 20 Aug
+    assert compute_response_deadline(date(2026, 8, 6), ServiceMethod.PERSONAL) == date(2026, 8, 20)
 
 
 def test_holidays_are_excluded():
     holidays = frozenset({date(2026, 8, 7)})
-    # Thu 6 Aug served, Fri 7 is a holiday -> Mon,Tue,Wed,Thu,Fri = Fri 14 Aug
+    # Thu 6 Aug served, Fri 7 is a holiday -> 10-14 / 17-21 = Fri 21 Aug
     assert compute_response_deadline(
         date(2026, 8, 6), ServiceMethod.PERSONAL, holidays
-    ) == date(2026, 8, 14)
+    ) == date(2026, 8, 21)
 
 
 def test_substituted_service_completes_ten_days_after_mailing():
-    # Complete 13 Aug, then five court days: Fri,Mon,Tue,Wed,Thu = Thu 20 Aug
+    # CCP 415.20(b): service complete on the tenth day after mailing, so
+    # 3 Aug -> complete 13 Aug, then ten court days = Thu 27 Aug.
     assert compute_response_deadline(
         date(2026, 8, 3), ServiceMethod.SUBSTITUTED
-    ) == date(2026, 8, 20)
+    ) == date(2026, 8, 27)
 
 
-def test_mail_service_adds_five_calendar_days():
-    # 3 Aug + 5 calendar = 8 Aug (Sat), then five court days from there
-    assert compute_response_deadline(date(2026, 8, 3), ServiceMethod.MAIL) == date(2026, 8, 14)
+def test_mail_service_adds_five_court_days_to_the_ten():
+    # CCP 1167(b) gives "an additional five court days" -- court days, added to
+    # the ten, not five calendar days bolted onto the front. 15 court days from
+    # Mon 3 Aug = Mon 24 Aug.
+    assert compute_response_deadline(date(2026, 8, 3), ServiceMethod.MAIL) == date(2026, 8, 24)
 
 
 def test_service_on_a_saturday_still_counts_forward():
-    # Sat 8 Aug served -> Mon,Tue,Wed,Thu,Fri = Fri 14 Aug
-    assert compute_response_deadline(date(2026, 8, 8), ServiceMethod.PERSONAL) == date(2026, 8, 14)
+    # Sat 8 Aug served -> 10-14 / 17-21 = Fri 21 Aug
+    assert compute_response_deadline(date(2026, 8, 8), ServiceMethod.PERSONAL) == date(2026, 8, 21)
 
 
 def test_days_remaining_is_positive_before_the_deadline():
@@ -66,16 +70,16 @@ def test_a_holiday_that_falls_on_a_weekend_changes_nothing():
     holidays = frozenset({date(2026, 8, 8)})
     assert compute_response_deadline(
         date(2026, 8, 6), ServiceMethod.PERSONAL, holidays
-    ) == date(2026, 8, 13)
+    ) == date(2026, 8, 20)
 
 
 def test_the_deadline_itself_never_lands_on_a_holiday():
     # Without a holiday, Thu 6 Aug -> Thu 13 Aug (per test_weekends_are_excluded).
     # Declaring that would-be deadline day a holiday must push the deadline to
     # the next court day, not return the holiday itself.
-    holidays = frozenset({date(2026, 8, 13)})
+    holidays = frozenset({date(2026, 8, 20)})
     deadline = compute_response_deadline(date(2026, 8, 6), ServiceMethod.PERSONAL, holidays)
-    assert deadline == date(2026, 8, 14)
+    assert deadline == date(2026, 8, 21)
     assert deadline not in holidays
 
 
@@ -86,7 +90,7 @@ def test_service_on_a_holiday_weekday_still_counts_forward_from_the_next_day():
     holidays = frozenset({date(2026, 8, 7)})  # Fri 7 Aug is a weekday holiday
     assert compute_response_deadline(
         date(2026, 8, 7), ServiceMethod.PERSONAL, holidays
-    ) == date(2026, 8, 14)
+    ) == date(2026, 8, 21)
 
 
 def test_a_service_date_in_the_past_still_computes_a_deadline():
@@ -94,13 +98,12 @@ def test_a_service_date_in_the_past_still_computes_a_deadline():
     # is not rejected here. days_remaining is the layer that tells the caller
     # the window has closed.
     deadline = compute_response_deadline(date(2020, 1, 1), ServiceMethod.PERSONAL)
-    assert deadline == date(2020, 1, 8)
+    assert deadline == date(2020, 1, 15)
 
 
 def test_court_day_counting_crosses_a_leap_day_correctly():
-    # Wed 25 Feb 2032 (a leap year) served -> Thu 26, Fri 27 (Sat 28/Sun 29
-    # skipped, including the leap day itself), Mon 1 Mar, Tue 2 Mar,
-    # Wed 3 Mar = Wed 3 Mar 2032.
+    # Wed 25 Feb 2032 (a leap year) served -> 26,27 (Sat 28/Sun 29 skipped,
+    # including the leap day itself), 1-5 Mar, 8,9,10 Mar = Wed 10 Mar 2032.
     assert compute_response_deadline(
         date(2032, 2, 25), ServiceMethod.PERSONAL
-    ) == date(2032, 3, 3)
+    ) == date(2032, 3, 10)

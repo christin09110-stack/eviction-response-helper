@@ -12,7 +12,7 @@ affect them. Legal aid organizations turn away roughly half of everyone who
 asks them for help, because they don't have the staff to take the case.
 
 In California, that gap collides with a hard clock. A tenant served with an
-unlawful detainer summons has **five court days** to file a written
+unlawful detainer summons has **10 court days** to file a written
 response (Cal. Code Civ. Proc. § 1167) — miss it, and the landlord can take
 a default judgment with no hearing. This project exists for the space
 between those two facts: someone with a hard deadline and, for roughly half

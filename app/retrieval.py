@@ -50,7 +50,7 @@ SIMILARITY_FLOOR = 0.40
 #   "what is the deadline to file my answer"  0.6462   0.6481    0.0020  refused
 #   "How many days do I have to respond?"     0.6839   0.6665    0.0175  refused
 #
-# The two close passages there are not rival answers: CCP 1167 says five court
+# The two close passages there are not rival answers: CCP 1167 says 10 court
 # days, and the service-methods passage says when the clock starts. Both
 # belong in the answer -- "when is my response due" only succeeded because it
 # cleared the margin and got to cite both. Refusing because two relevant
