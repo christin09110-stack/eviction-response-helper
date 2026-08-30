@@ -24,6 +24,45 @@ let lastAnswerStyle = "plain";
 
 const $ = (id) => document.getElementById(id);
 
+/* What the summons told us, kept so the filing step can name the tenant's own
+ * court rather than guessing at a courthouse, and restate their date next to
+ * the instructions instead of making them scroll back for it. */
+const CASE = { deadline: null, court: null };
+
+/* "Tuesday, 17 August 2026" reads as a date a person can act on; the ISO
+ * string the API returns does not. Falls back to the raw value rather than
+ * throwing if the date is ever unparseable. */
+function formatDeadline(iso) {
+  const parsed = new Date(iso + "T00:00:00");
+  if (Number.isNaN(parsed.getTime())) return iso;
+  return parsed.toLocaleDateString(undefined, {
+    weekday: "long", day: "numeric", month: "long", year: "numeric",
+  });
+}
+
+function setStep(n) {
+  document.querySelectorAll("#progress li").forEach((li) => {
+    const step = Number(li.dataset.step);
+    li.toggleAttribute("data-done", step < n);
+    if (step === n) li.setAttribute("aria-current", "step");
+    else li.removeAttribute("aria-current");
+  });
+}
+
+function showFilingStep() {
+  $("file-court").textContent = CASE.court
+    ? `${CASE.court} — the court named on your summons`
+    : "The court named on your summons. It is printed at the top of the first page.";
+
+  $("file-when").textContent = CASE.deadline
+    ? `On or before ${formatDeadline(CASE.deadline)}. Filing late is not the same as not filing — if you have missed it, go anyway and ask the clerk.`
+    : "On or before your response deadline.";
+
+  $("file-card").hidden = false;
+  setStep(4);
+  $("file-card").scrollIntoView({ behavior: "smooth", block: "start" });
+}
+
 // Presentation-only day count for the hero: the backend's app.deadlines
 // already computed the deadline date and put it in reply.data.deadline; this
 // just re-expresses that same date as "N days left" for the headline number.
@@ -103,6 +142,7 @@ $("photo").addEventListener("change", async (event) => {
 
   $("halt-card").hidden = true;
   $("draft-card").hidden = true;
+  $("file-card").hidden = true;
 
   if (reply.kind === "retake") {
     resetHero();
@@ -115,8 +155,11 @@ $("photo").addEventListener("change", async (event) => {
   } else if (reply.kind === "case_started") {
     status.textContent = "Summons read successfully.";
     showHeroDeadline(reply.data.deadline, reply.text);
+    CASE.deadline = reply.data.deadline;
+    CASE.court = reply.data.court_branch;
     $("draft-status").textContent = "";
     $("draft-card").hidden = false;
+    setStep(2);
   } else {
     resetHero();
     status.textContent = reply.text || "Something unexpected happened. Please try again.";
@@ -172,6 +215,8 @@ $("draft").addEventListener("click", async () => {
   link.click();
   link.remove();
   URL.revokeObjectURL(url);
+
+  showFilingStep();
 
   status.textContent = "Draft downloaded — this is not filed. Review every line, then file it yourself.";
 });

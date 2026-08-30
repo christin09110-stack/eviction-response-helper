@@ -1,9 +1,11 @@
+import hashlib
+from pathlib import Path
 import io
 import os
 from datetime import date
 
 from fastapi import File, Form, HTTPException, UploadFile
-from fastapi.responses import FileResponse, StreamingResponse
+from fastapi.responses import FileResponse, HTMLResponse, StreamingResponse
 from fastapi.staticfiles import StaticFiles
 from pydantic import BaseModel
 
@@ -165,9 +167,28 @@ def draft_endpoint(payload: DraftRequest):
     )
 
 
+def _asset_version() -> str:
+    """A digest of the console's own CSS and JS.
+
+    StaticFiles sends an ETag but no Cache-Control, so a browser can serve the
+    previous stylesheet well after a deploy. Change the URL when the bytes
+    change instead of defeating caching.
+    """
+    digest = hashlib.sha256()
+    for name in ("app.css", "app.js"):
+        digest.update(Path("web", name).read_bytes())
+    return digest.hexdigest()[:12]
+
+
+ASSET_VERSION = _asset_version()
+
+
 @app.get("/")
 def console():
-    return FileResponse("web/index.html")
+    html = Path("web/index.html").read_text()
+    html = html.replace("/static/app.css", f"/static/app.css?v={ASSET_VERSION}")
+    html = html.replace("/static/app.js", f"/static/app.js?v={ASSET_VERSION}")
+    return HTMLResponse(html, headers={"Cache-Control": "no-cache"})
 
 
 app.mount("/static", StaticFiles(directory="web"), name="static")
