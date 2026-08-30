@@ -304,8 +304,8 @@ eviction case is not a cosmetic bug.
   Logging
 - **PDF generation:** ReportLab
 - **Frontend:** Plain HTML/CSS/JS (no framework, no build step) — Material
-  design grammar, mobile-first, Web Speech API for voice input/output with a
-  typed fallback
+  design grammar, one column on a phone and two from 900px up, Web Speech
+  API for voice input/output with a typed fallback
 - **Hosting:** Google Cloud Run
 - **Testing:** pytest, `substrate.fakes.FakeModel` / `FakeFirestore` (no
   network or credentials required for the test suite), axe-core (WCAG audit).
@@ -382,7 +382,7 @@ and the check.
   real GCP credentials configured. Gated behind the same `USE_FAKE_STORE`
   environment seam already used for the Firestore client, using an
   in-memory span exporter for tests.
-- **WCAG compliance was checked, not assumed.** The mobile console was
+- **WCAG compliance was checked, not assumed.** The console was
   scanned with an actual axe-core run (Playwright-driven, both the default
   and every revealed UI state — deadline shown, halt shown, answer shown —
   and both the light and dark color palettes): zero violations. Every
