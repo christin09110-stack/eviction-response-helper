@@ -5,3 +5,14 @@ __pycache__/
 *.egg-info/
 .harness/
 uv.lock
+
+# Submission scaffolding — drafted here, published elsewhere.
+DEVPOST.md
+DEMO_SCRIPT.md
+DEMO_STEPS.md
+SOCIAL.md
+BLOG-medium.html
+*.pptx
+*.drawio
+*-thumbnail.*
+*-architecture.png
