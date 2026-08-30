@@ -1,5 +1,8 @@
 # Architecture
 
+![Architecture](navigator-architecture.svg)
+
+
 ## Diagram
 
 ```mermaid

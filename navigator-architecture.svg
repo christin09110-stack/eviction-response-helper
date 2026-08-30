@@ -1,0 +1,97 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1320" height="910" viewBox="0 0 1320 910">
+<defs><marker id="a" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto"><path d="M0,1 L9,5 L0,9" fill="none" stroke="#454e57" stroke-width="1.4"/></marker><marker id="g" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto"><path d="M0,1 L9,5 L0,9" fill="none" stroke="#17603f" stroke-width="1.4"/></marker><marker id="r" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto"><path d="M0,1 L9,5 L0,9" fill="none" stroke="#8a1c1c" stroke-width="1.4"/></marker></defs>
+<rect width="1320" height="910" fill="#fff"/>
+<rect x="40" y="34" width="1240" height="46" rx="4" fill="#f4f5f7" stroke="#ccd2d8"/>
+<rect x="60" y="48" width="16" height="16" rx="3" fill="#fdf3d9" stroke="#6b4a00"/>
+<text x="84" y="61" font-family="Public Sans,sans-serif" font-size="13" font-weight="600" fill="#14181d" text-anchor="start">the model reads and explains</text>
+<rect x="330" y="48" width="16" height="16" rx="3" fill="#e4f1ef" stroke="#0d5c55"/>
+<text x="354" y="61" font-family="Public Sans,sans-serif" font-size="13" font-weight="600" fill="#14181d" text-anchor="start">pure functions decide anything with a legal consequence</text>
+<rect x="800" y="48" width="16" height="16" rx="3" fill="#e8f0fe" stroke="#4285f4"/>
+<text x="824" y="61" font-family="Public Sans,sans-serif" font-size="13" font-weight="600" fill="#14181d" text-anchor="start">Google Cloud</text>
+<text x="1264" y="61" font-family="IBM Plex Mono,monospace" font-size="12" font-weight="400" fill="#5e6771" text-anchor="end">nothing is filed; a person files it</text>
+<rect x="40" y="100" width="1240" height="150" rx="5" fill="none" stroke="#ccd2d8" stroke-dasharray="4 4"/>
+<circle cx="62" cy="122" r="12" fill="#14181d"/>
+<text x="62" y="126" font-family="IBM Plex Mono,monospace" font-size="12" font-weight="600" fill="#fff" text-anchor="middle">1</text>
+<text x="84" y="127" font-family="Public Sans,sans-serif" font-size="15" font-weight="600" fill="#14181d" text-anchor="start">Read the summons, then compute the date</text>
+<rect x="70" y="142" width="180" height="54" rx="4" fill="#fff" stroke="#14181d"/>
+<text x="160.0" y="165.0" font-family="Public Sans,sans-serif" font-size="13" font-weight="600" fill="#14181d" text-anchor="middle">Photo of the summons</text>
+<text x="160.0" y="183.0" font-family="IBM Plex Mono,monospace" font-size="10.5" font-weight="400" fill="#454e57" text-anchor="middle">taken on a phone</text>
+<rect x="292" y="142" width="220" height="54" rx="4" fill="#fdf3d9" stroke="#6b4a00"/>
+<text x="402.0" y="165.0" font-family="Public Sans,sans-serif" font-size="13" font-weight="600" fill="#6b4a00" text-anchor="middle">Gemini 3.5 Flash</text>
+<text x="402.0" y="183.0" font-family="IBM Plex Mono,monospace" font-size="10.5" font-weight="400" fill="#454e57" text-anchor="middle">reads the fields</text>
+<rect x="554" y="142" width="230" height="54" rx="4" fill="#e4f1ef" stroke="#0d5c55"/>
+<text x="669.0" y="165.0" font-family="Public Sans,sans-serif" font-size="13" font-weight="600" fill="#0d5c55" text-anchor="middle">compute_response_deadline</text>
+<text x="669.0" y="183.0" font-family="IBM Plex Mono,monospace" font-size="10.5" font-weight="400" fill="#454e57" text-anchor="middle">10 court days, § 1167</text>
+<rect x="826" y="142" width="200" height="54" rx="4" fill="#e4f1ef" stroke="#0d5c55"/>
+<text x="926.0" y="165.0" font-family="Public Sans,sans-serif" font-size="13" font-weight="600" fill="#0d5c55" text-anchor="middle">judicial_holidays</text>
+<text x="926.0" y="183.0" font-family="IBM Plex Mono,monospace" font-size="10.5" font-weight="400" fill="#454e57" text-anchor="middle">computed from § 135</text>
+<rect x="1068" y="142" width="190" height="54" rx="4" fill="#e8f0fe" stroke="#4285f4"/>
+<text x="1163.0" y="165.0" font-family="Public Sans,sans-serif" font-size="13" font-weight="600" fill="#14181d" text-anchor="middle">Firestore</text>
+<text x="1163.0" y="183.0" font-family="IBM Plex Mono,monospace" font-size="10.5" font-weight="400" fill="#454e57" text-anchor="middle">case + audit trail</text>
+<path d="M250,169 L289,169" fill="none" stroke="#454e57" stroke-width="1.4" marker-end="url(#a)" stroke-dasharray=""/>
+<path d="M512,169 L551,169" fill="none" stroke="#454e57" stroke-width="1.4" marker-end="url(#a)" stroke-dasharray=""/>
+<path d="M784,169 L823,169" fill="none" stroke="#454e57" stroke-width="1.4" marker-end="url(#a)" stroke-dasharray=""/>
+<path d="M1026,169 L1065,169" fill="none" stroke="#454e57" stroke-width="1.4" marker-end="url(#a)" stroke-dasharray=""/>
+<text x="70" y="226" font-family="Public Sans,sans-serif" font-size="12.5" font-weight="400" fill="#454e57" text-anchor="start">An unusable photo asks for a retake. A missed deadline stops and refers to legal aid, rather than walking somebody through paperwork that cannot help.</text>
+<rect x="40" y="270" width="1240" height="368" rx="5" fill="none" stroke="#ccd2d8" stroke-dasharray="4 4"/>
+<circle cx="62" cy="292" r="12" fill="#14181d"/>
+<text x="62" y="296" font-family="IBM Plex Mono,monospace" font-size="12" font-weight="600" fill="#fff" text-anchor="middle">2</text>
+<text x="84" y="297" font-family="Public Sans,sans-serif" font-size="15" font-weight="600" fill="#14181d" text-anchor="start">Answer only from retrieved text, or refuse</text>
+<rect x="70" y="320" width="180" height="54" rx="4" fill="#fff" stroke="#14181d"/>
+<text x="160.0" y="343.0" font-family="Public Sans,sans-serif" font-size="13" font-weight="600" fill="#14181d" text-anchor="middle">The question</text>
+<text x="160.0" y="361.0" font-family="IBM Plex Mono,monospace" font-size="10.5" font-weight="400" fill="#454e57" text-anchor="middle">typed or spoken</text>
+<rect x="292" y="320" width="220" height="54" rx="4" fill="#e8f0fe" stroke="#4285f4"/>
+<text x="402.0" y="343.0" font-family="Public Sans,sans-serif" font-size="13" font-weight="600" fill="#14181d" text-anchor="middle">Vertex embeddings</text>
+<text x="402.0" y="361.0" font-family="IBM Plex Mono,monospace" font-size="10.5" font-weight="400" fill="#454e57" text-anchor="middle">text-embedding-005</text>
+<rect x="554" y="320" width="230" height="54" rx="4" fill="#e4f1ef" stroke="#0d5c55"/>
+<text x="669.0" y="343.0" font-family="Public Sans,sans-serif" font-size="13" font-weight="600" fill="#0d5c55" text-anchor="middle">rank the corpus</text>
+<text x="669.0" y="361.0" font-family="IBM Plex Mono,monospace" font-size="10.5" font-weight="400" fill="#454e57" text-anchor="middle">four documents of law</text>
+<rect x="826" y="320" width="200" height="54" rx="4" fill="#fdf3d9" stroke="#6b4a00"/>
+<text x="926.0" y="343.0" font-family="Public Sans,sans-serif" font-size="13" font-weight="600" fill="#6b4a00" text-anchor="middle">Gemini 3.5 Flash</text>
+<text x="926.0" y="361.0" font-family="IBM Plex Mono,monospace" font-size="10.5" font-weight="400" fill="#454e57" text-anchor="middle">drafts the answer</text>
+<path d="M250,347 L289,347" fill="none" stroke="#454e57" stroke-width="1.4" marker-end="url(#a)" stroke-dasharray=""/>
+<path d="M512,347 L551,347" fill="none" stroke="#454e57" stroke-width="1.4" marker-end="url(#a)" stroke-dasharray=""/>
+<path d="M784,347 L823,347" fill="none" stroke="#454e57" stroke-width="1.4" marker-end="url(#a)" stroke-dasharray=""/>
+<rect x="554" y="432" width="230" height="66" rx="4" fill="#e4f1ef" stroke="#0d5c55"/>
+<text x="669.0" y="461.0" font-family="Public Sans,sans-serif" font-size="13" font-weight="600" fill="#0d5c55" text-anchor="middle">Is every citation exactly</text>
+<text x="669.0" y="479.0" font-family="IBM Plex Mono,monospace" font-size="10.5" font-weight="400" fill="#454e57" text-anchor="middle">one it was shown?</text>
+<path d="M926,378 L700,430" fill="none" stroke="#454e57" stroke-width="1.4" marker-end="url(#a)" stroke-dasharray=""/>
+<text x="838" y="414" font-family="IBM Plex Mono,monospace" font-size="10" font-weight="400" fill="#5e6771" text-anchor="middle">the draft answer</text>
+<rect x="240" y="530" width="250" height="54" rx="4" fill="#fbeeee" stroke="#8a1c1c"/>
+<text x="365.0" y="553.0" font-family="Public Sans,sans-serif" font-size="13" font-weight="600" fill="#8a1c1c" text-anchor="middle">Refuse, and offer</text>
+<text x="365.0" y="571.0" font-family="IBM Plex Mono,monospace" font-size="10.5" font-weight="400" fill="#454e57" text-anchor="middle">a legal aid intake</text>
+<rect x="860" y="530" width="250" height="54" rx="4" fill="#e7f3ec" stroke="#17603f"/>
+<text x="985.0" y="553.0" font-family="Public Sans,sans-serif" font-size="13" font-weight="600" fill="#17603f" text-anchor="middle">Answer, with the citation</text>
+<text x="985.0" y="571.0" font-family="IBM Plex Mono,monospace" font-size="10.5" font-weight="400" fill="#454e57" text-anchor="middle">shown next to it</text>
+<path d="M600,498 L600,514 L365,514 L365,526" fill="none" stroke="#8a1c1c" stroke-width="1.4" marker-end="url(#r)"/>
+<text x="430" y="508" font-family="IBM Plex Mono,monospace" font-size="10" font-weight="400" fill="#8a1c1c" text-anchor="middle">no</text>
+<path d="M740,498 L740,514 L985,514 L985,526" fill="none" stroke="#17603f" stroke-width="1.4" marker-end="url(#g)"/>
+<text x="900" y="508" font-family="IBM Plex Mono,monospace" font-size="10" font-weight="400" fill="#17603f" text-anchor="middle">yes</text>
+<text x="70" y="404" font-family="Public Sans,sans-serif" font-size="12.5" font-weight="400" fill="#454e57" text-anchor="start">Retrieval returns nothing above the</text>
+<text x="70" y="422" font-family="Public Sans,sans-serif" font-size="12.5" font-weight="400" fill="#454e57" text-anchor="start">similarity floor? Refuse there too.</text>
+<text x="70" y="452" font-family="Public Sans,sans-serif" font-size="12.5" font-weight="400" fill="#454e57" text-anchor="start">A citation the model was never shown does not</text>
+<text x="70" y="470" font-family="Public Sans,sans-serif" font-size="12.5" font-weight="400" fill="#454e57" text-anchor="start">survive, however plausible it looks. Exact</text>
+<text x="70" y="488" font-family="Public Sans,sans-serif" font-size="12.5" font-weight="400" fill="#454e57" text-anchor="start">membership, not fuzzy matching.</text>
+<rect x="40" y="660" width="1240" height="220" rx="5" fill="none" stroke="#ccd2d8" stroke-dasharray="4 4"/>
+<circle cx="62" cy="682" r="12" fill="#14181d"/>
+<text x="62" y="686" font-family="IBM Plex Mono,monospace" font-size="12" font-weight="600" fill="#fff" text-anchor="middle">3</text>
+<text x="84" y="687" font-family="Public Sans,sans-serif" font-size="15" font-weight="600" fill="#14181d" text-anchor="start">Prepare the form, then hand it to a person</text>
+<rect x="340" y="706" width="240" height="54" rx="4" fill="#fff" stroke="#14181d"/>
+<text x="460.0" y="729.0" font-family="Public Sans,sans-serif" font-size="13" font-weight="600" fill="#14181d" text-anchor="middle">What the tenant ticked</text>
+<text x="460.0" y="747.0" font-family="IBM Plex Mono,monospace" font-size="10.5" font-weight="400" fill="#454e57" text-anchor="middle">reported disrepair, dates…</text>
+<rect x="624" y="706" width="240" height="54" rx="4" fill="#e4f1ef" stroke="#0d5c55"/>
+<text x="744.0" y="729.0" font-family="Public Sans,sans-serif" font-size="13" font-weight="600" fill="#0d5c55" text-anchor="middle">assess_defenses</text>
+<text x="744.0" y="747.0" font-family="IBM Plex Mono,monospace" font-size="10.5" font-weight="400" fill="#454e57" text-anchor="middle">fixed rules, no model</text>
+<rect x="908" y="706" width="240" height="54" rx="4" fill="#e4f1ef" stroke="#0d5c55"/>
+<text x="1028.0" y="729.0" font-family="Public Sans,sans-serif" font-size="13" font-weight="600" fill="#0d5c55" text-anchor="middle">UD-105 as a PDF</text>
+<text x="1028.0" y="747.0" font-family="IBM Plex Mono,monospace" font-size="10.5" font-weight="400" fill="#454e57" text-anchor="middle">rendered in memory</text>
+<path d="M580,733 L621,733" fill="none" stroke="#454e57" stroke-width="1.4" marker-end="url(#a)" stroke-dasharray=""/>
+<path d="M864,733 L905,733" fill="none" stroke="#454e57" stroke-width="1.4" marker-end="url(#a)" stroke-dasharray=""/>
+<rect x="624" y="792" width="524" height="54" rx="4" fill="#e7f3ec" stroke="#17603f"/>
+<text x="886.0" y="815.0" font-family="Public Sans,sans-serif" font-size="13" font-weight="600" fill="#17603f" text-anchor="middle">Where to file it, by when, and form FW-001 if the fee is unaffordable</text>
+<text x="886.0" y="833.0" font-family="IBM Plex Mono,monospace" font-size="10.5" font-weight="400" fill="#454e57" text-anchor="middle">the court named on the tenant's own summons</text>
+<path d="M1028,760 L1028,788" fill="none" stroke="#17603f" stroke-width="1.4" marker-end="url(#g)" stroke-dasharray=""/>
+<text x="70" y="730" font-family="Public Sans,sans-serif" font-size="12.5" font-weight="400" fill="#454e57" text-anchor="start">Which defenses apply is decided</text>
+<text x="70" y="748" font-family="Public Sans,sans-serif" font-size="12.5" font-weight="400" fill="#454e57" text-anchor="start">by rules, from what the tenant</text>
+<text x="70" y="766" font-family="Public Sans,sans-serif" font-size="12.5" font-weight="400" fill="#454e57" text-anchor="start">says. Never by the model.</text>
+</svg>
