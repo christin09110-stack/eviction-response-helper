@@ -3,6 +3,7 @@ from datetime import date
 
 from app.answering import answer_question
 from app.deadlines import compute_response_deadline
+from app.holidays import holidays_around
 from app.intake import RetakeRequest, extract_summons, needs_retake
 from app.preferences import preferred_style
 from app.retrieval import load_corpus, retrieve
@@ -49,7 +50,9 @@ def start_case(model, store: Store, user_id: str, image: bytes, today: date) -> 
         if retake is not None:
             return Reply(kind="retake", text=retake.guidance, data={"reason": retake.reason})
 
-        deadline = compute_response_deadline(fields.served_on, fields.service_method)
+        deadline = compute_response_deadline(
+            fields.served_on, fields.service_method, holidays_around(fields.served_on)
+        )
         store.append_audit(user_id, {"step": "deadline", "deadline": str(deadline)})
 
         case = {
@@ -75,7 +78,14 @@ def start_case(model, store: Store, user_id: str, image: bytes, today: date) -> 
         return Reply(
             kind="case_started",
             text=f"Your response is due {deadline:%A %d %B %Y}.",
-            data={"deadline": str(deadline), "case_number": fields.case_number},
+            data={
+                "deadline": str(deadline),
+                "case_number": fields.case_number,
+                # Echoed back so the filing step can name the court from the
+                # tenant's own papers rather than guessing at a courthouse.
+                "court_branch": fields.court_branch,
+                "service_method": fields.service_method.value if fields.service_method else None,
+            },
         )
 
 

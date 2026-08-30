@@ -25,16 +25,26 @@
     </div>
   </header>
 
+  <div class="shell">
   <main id="main">
+    <ol class="progress" id="progress" aria-label="Your progress">
+      <li data-step="1" aria-current="step">Your deadline</li>
+      <li data-step="2">Questions</li>
+      <li data-step="3">Your Answer</li>
+      <li data-step="4">Filing it</li>
+    </ol>
+
     <section class="hero" id="hero" aria-labelledby="hero-heading" aria-live="polite">
       <div class="hero-state" id="hero-pending">
         <p class="hero-eyebrow">Your deadline</p>
-        <h2 id="hero-heading">Find out your exact deadline</h2>
+        <h2 id="hero-heading">Photograph your summons and this works out your real date</h2>
         <p class="hero-body">
-          Most California eviction responses are due in 10 court days.
-          Photograph your summons below and this works out your real date —
-          not an estimate.
+          A California eviction response is due within 10 court days of being
+          served — weekends and court holidays do not count, and how you were
+          served can add more. This reads your papers and works out the actual
+          date rather than estimating.
         </p>
+        <p class="hero-cite">Cal. Code Civ. Proc. § 1167, as amended by AB 2347 (2025)</p>
       </div>
 
       <div class="hero-state" id="hero-active" hidden>
@@ -48,7 +58,7 @@
       </div>
     </section>
 
-    <section class="card" id="halt-card" hidden aria-labelledby="halt-heading">
+    <section class="block halt" id="halt-card" hidden aria-labelledby="halt-heading">
       <div class="card-icon-row">
         <svg class="card-icon urgent" viewBox="0 0 24 24" aria-hidden="true" focusable="false">
           <path d="M12 3 2 20h20L12 3Z" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"/>
@@ -60,8 +70,8 @@
       <p id="halt-text" role="alert"></p>
     </section>
 
-    <section class="card" aria-labelledby="step1-heading">
-      <h2 id="step1-heading">1. Photograph your summons</h2>
+    <section class="block" aria-labelledby="step1-heading">
+      <h2 id="step1-heading"><span class="n">Step 1</span>Photograph your summons</h2>
       <p class="hint">Lay the first page flat in good light so all four corners are visible.</p>
 
       <label class="photo-picker" for="photo">
@@ -78,8 +88,8 @@
       <p id="photo-status" role="status" aria-live="polite"></p>
     </section>
 
-    <section class="card" aria-labelledby="step2-heading">
-      <h2 id="step2-heading">2. Ask a question</h2>
+    <section class="block" aria-labelledby="step2-heading">
+      <h2 id="step2-heading"><span class="n">Step 2</span>Ask a question</h2>
       <p class="hint">For example: "How long do I have to respond?"</p>
       <label for="q">What do you want to know?</label>
       <input id="q" type="text" autocomplete="off" inputmode="text">
@@ -120,8 +130,8 @@
       </div>
     </section>
 
-    <section class="card" id="draft-card" hidden aria-labelledby="draft-heading">
-      <h2 id="draft-heading">3. Prepare your Answer (UD-105)</h2>
+    <section class="block" id="draft-card" hidden aria-labelledby="draft-heading">
+      <h2 id="draft-heading"><span class="n">Step 3</span>Prepare your Answer (UD-105)</h2>
       <p class="hint">
         Answer what applies to you. Whether a defense is included is decided
         by fixed rules from what you say here — never guessed.
@@ -166,6 +176,54 @@
       <p id="draft-status" role="status" aria-live="polite"></p>
     </section>
 
+    <section class="block" id="file-card" hidden aria-labelledby="file-heading">
+      <h2 id="file-heading"><span class="n">Step 4</span>File it yourself</h2>
+      <p class="hint">
+        You have a completed UD-105. Nothing has been filed. The court will not
+        know you are responding until you hand this in.
+      </p>
+
+      <h3 class="sub">Where</h3>
+      <p id="file-court" class="file-court"></p>
+      <p class="hint">
+        That is the court named on your summons. If you are unsure of the
+        address, the clerk's office for that branch is listed on
+        <a href="https://selfhelp.courts.ca.gov/find-your-court">the California
+        Courts' find-your-court page</a>.
+      </p>
+
+      <h3 class="sub">By when</h3>
+      <p id="file-when" class="file-when"></p>
+
+      <h3 class="sub">How</h3>
+      <ul class="ways">
+        <li><strong>In person</strong> at the clerk's window. Take the printed
+          UD-105 and a copy for yourself, and ask the clerk to stamp your copy.</li>
+        <li><strong>By mail</strong>, if your court accepts it. Send it early
+          enough to arrive before the deadline — the filing date is the date
+          the court receives it, not the date you post it.</li>
+        <li><strong>Electronically</strong>, if your court requires or offers
+          e-filing. Each court uses its own approved provider.</li>
+      </ul>
+
+      <h3 class="sub">If you cannot afford the filing fee</h3>
+      <p class="hint">
+        Ask the court to waive it with <strong>form FW-001, Request to Waive
+        Court Fees</strong>. A waiver covers fees to respond to a case, which
+        is what this filing is. You qualify automatically if you receive
+        Medi-Cal, CalFresh, CalWORKs, SSI/SSP, General Assistance, WIC,
+        unemployment, Tribal TANF, IHSS or CAPI — or if your household income
+        is under the limits in item 5b of that form.
+      </p>
+      <p class="hint">
+        Do not skip filing because of the fee. File the waiver request with
+        your Answer.
+      </p>
+      <p class="cites">
+        Cal. Rules of Court, rule 3.55 and Gov. Code § 68631 · form FW-001
+      </p>
+    </section>
+
     <footer class="disclaimer">
       <p>
         Every legal statement here carries a citation. When this tool cannot
@@ -174,6 +232,7 @@
       </p>
     </footer>
   </main>
+</div>
 
   <script src="/static/app.js"></script>
 </body>
